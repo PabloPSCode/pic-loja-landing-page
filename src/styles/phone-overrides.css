@@ -1,0 +1,24 @@
+/* src/styles/phone-overrides.css
+   Remove default borders/shadows from react-international-phone */
+
+.react-international-phone-input-container,
+.react-international-phone-input,
+.react-international-phone-country-selector,
+.react-international-phone-country-selector-button,
+.react-international-phone-country-selector-dropdown {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Some builds add a right border on the selector button */
+.react-international-phone-country-selector-button {
+  border-right: 0 !important;
+}
+
+/* Keep focus clean; your component styles will handle focus rings */
+.react-international-phone-input:focus,
+.react-international-phone-country-selector-button:focus,
+.react-international-phone-country-selector-button:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
