@@ -1,0 +1,58 @@
+<svg width="720" height="500" viewBox="0 0 720 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="screenFill" x1="96" y1="58" x2="610" y2="422" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFDF8"/>
+      <stop offset="1" stop-color="#F1E1CD"/>
+    </linearGradient>
+  </defs>
+  <rect width="720" height="500" rx="40" fill="transparent"/>
+  <ellipse cx="332" cy="430" rx="244" ry="28" fill="#A67C5A" opacity="0.14"/>
+  <g filter="drop-shadow(0px 20px 36px rgba(80, 52, 34, 0.2))">
+    <rect x="76" y="74" width="412" height="246" rx="24" fill="#1F1A17"/>
+    <rect x="92" y="90" width="380" height="214" rx="16" fill="url(#screenFill)"/>
+    <rect x="92" y="90" width="380" height="26" rx="16" fill="#F3E7D8"/>
+    <circle cx="120" cy="103" r="4" fill="#9A6647"/>
+    <circle cx="136" cy="103" r="4" fill="#D2A06B"/>
+    <circle cx="152" cy="103" r="4" fill="#E9D7C2"/>
+    <rect x="116" y="134" width="102" height="128" rx="18" fill="#E9D7C2"/>
+    <rect x="232" y="134" width="102" height="58" rx="18" fill="#F5ECDD"/>
+    <rect x="348" y="134" width="96" height="58" rx="18" fill="#F5ECDD"/>
+    <rect x="232" y="204" width="212" height="58" rx="18" fill="#FFF8EF"/>
+    <rect x="128" y="148" width="78" height="18" rx="9" fill="#9A6647"/>
+    <rect x="128" y="176" width="50" height="10" rx="5" fill="#C6A481"/>
+    <rect x="128" y="198" width="64" height="10" rx="5" fill="#C6A481"/>
+    <g>
+      <rect x="248" y="148" width="70" height="12" rx="6" fill="#674736"/>
+      <rect x="248" y="168" width="52" height="8" rx="4" fill="#C8A482"/>
+      <rect x="364" y="148" width="64" height="12" rx="6" fill="#674736"/>
+      <rect x="364" y="168" width="44" height="8" rx="4" fill="#C8A482"/>
+      <rect x="248" y="218" width="176" height="12" rx="6" fill="#674736"/>
+      <rect x="248" y="242" width="128" height="8" rx="4" fill="#C8A482"/>
+    </g>
+    <path d="M246 320H318L338 350H136L156 320H228" fill="#54423A"/>
+  </g>
+  <g filter="drop-shadow(0px 24px 34px rgba(80, 52, 34, 0.22))">
+    <rect x="286" y="158" width="318" height="212" rx="24" fill="#171311"/>
+    <rect x="300" y="172" width="290" height="184" rx="16" fill="#FFFDF8"/>
+    <rect x="300" y="172" width="290" height="24" rx="16" fill="#EFE1CF"/>
+    <rect x="324" y="214" width="74" height="74" rx="18" fill="#F4E5D5"/>
+    <rect x="410" y="214" width="74" height="74" rx="18" fill="#F4E5D5"/>
+    <rect x="496" y="214" width="74" height="74" rx="18" fill="#F4E5D5"/>
+    <rect x="324" y="306" width="74" height="22" rx="11" fill="#9A6647"/>
+    <rect x="410" y="306" width="74" height="22" rx="11" fill="#9A6647"/>
+    <rect x="496" y="306" width="74" height="22" rx="11" fill="#9A6647"/>
+    <rect x="336" y="228" width="50" height="12" rx="6" fill="#6C4A38"/>
+    <rect x="422" y="228" width="50" height="12" rx="6" fill="#6C4A38"/>
+    <rect x="508" y="228" width="50" height="12" rx="6" fill="#6C4A38"/>
+    <circle cx="553" cy="184" r="4" fill="#6C4A38"/>
+  </g>
+  <g filter="drop-shadow(0px 18px 28px rgba(80, 52, 34, 0.18))">
+    <rect x="132" y="260" width="118" height="188" rx="28" fill="#171311"/>
+    <rect x="140" y="268" width="102" height="172" rx="22" fill="#FFFDF8"/>
+    <rect x="152" y="292" width="78" height="50" rx="16" fill="#F2E2CF"/>
+    <rect x="152" y="354" width="78" height="12" rx="6" fill="#6C4A38"/>
+    <rect x="152" y="376" width="56" height="8" rx="4" fill="#C8A482"/>
+    <rect x="152" y="406" width="78" height="20" rx="10" fill="#9A6647"/>
+    <circle cx="191" cy="278" r="3" fill="#C8A482"/>
+  </g>
+</svg>

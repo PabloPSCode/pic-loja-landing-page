@@ -955,3 +955,38 @@ export const mockedAddresses: Address[] = [
     country: "Brasil",
   },
 ];
+
+export const plans = [
+  {
+    id: 1,
+    price: "19.90",
+    availableCredits: "100 créditos",
+    features: [
+      "Geração de produtos por IA",
+      "Informações editáveis",
+      "Suporte via email",
+    ],
+  },
+  {
+    id: 2,
+    price: "49.90",
+    availableCredits: "300 créditos",
+    features: [
+      "Geração de produtos por IA",
+      "Informações editáveis",
+      "Suporte via email e chat",
+      "Acesso a recursos exclusivos",
+    ],
+  },
+  {
+    id: 3,
+    price: "79.90",
+    availableCredits: "500 créditos",
+    features: [
+      "Geração de produtos por IA",
+      "Informações editáveis",
+      "Suporte via email e chat",
+      "Acesso a recursos exclusivos",
+    ],
+  },
+];

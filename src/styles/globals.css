@@ -3,41 +3,41 @@
 @import "../styles/phone-overrides.css";
 @custom-variant dark (&:where(.dark, .dark *));
 
-@theme {--color-primary-50:  #f0fdf4;}
-@theme {--color-primary-100: #dcfce7;}
-@theme {--color-primary-200: #bbf7d0;}
-@theme {--color-primary-300: #86efac;}
-@theme {--color-primary-400: #4ade80;}
-@theme {--color-primary-500: #009739;}
-@theme {--color-primary-600: #008131;}
-@theme {--color-primary-700: #006628;}
-@theme {--color-primary-800: #004d1f;}
-@theme {--color-primary-900: #003315;}
-@theme {--color-primary-950: #001a0a;}
+@theme {--color-primary-50:  #f4ffe9;}
+@theme {--color-primary-100: #e7ffd0;}
+@theme {--color-primary-200: #d0ffab;}
+@theme {--color-primary-300: #b2ff78;}
+@theme {--color-primary-400: #95ff52;}
+@theme {--color-primary-500: #7cff3a;}
+@theme {--color-primary-600: #58d91a;}
+@theme {--color-primary-700: #42af12;}
+@theme {--color-primary-800: #2f840a;}
+@theme {--color-primary-900: #1c5b04;}
+@theme {--color-primary-950: #0c3201;}
 
-@theme {--color-secondary-50:  #fffdea;}
-@theme {--color-secondary-100: #fef9c3;}
-@theme {--color-secondary-200: #fef08a;}
-@theme {--color-secondary-300: #fde047;}
-@theme {--color-secondary-400: #facc15;}
-@theme {--color-secondary-500: #ffcc29;}
-@theme {--color-secondary-600: #e6b800;}
-@theme {--color-secondary-700: #cca300;}
-@theme {--color-secondary-800: #997a00;}
-@theme {--color-secondary-900: #665200;}
-@theme {--color-secondary-950: #332900;}
+@theme {--color-secondary-50:  #fffdf0;}
+@theme {--color-secondary-100: #fff8c7;}
+@theme {--color-secondary-200: #ffef8b;}
+@theme {--color-secondary-300: #ffe14b;}
+@theme {--color-secondary-400: #ffd926;}
+@theme {--color-secondary-500: #ffd000;}
+@theme {--color-secondary-600: #d5ab00;}
+@theme {--color-secondary-700: #a88400;}
+@theme {--color-secondary-800: #7a5f00;}
+@theme {--color-secondary-900: #514000;}
+@theme {--color-secondary-950: #2b2100;}
 
-@theme {--color-tertiary-50:  #eff6ff;}
-@theme {--color-tertiary-100: #dbeafe;}
-@theme {--color-tertiary-200: #bfdbfe;}
-@theme {--color-tertiary-300: #93c5fd;}
-@theme {--color-tertiary-400: #60a5fa;}
-@theme {--color-tertiary-500: #002776;}
-@theme {--color-tertiary-600: #001f5e;}
-@theme {--color-tertiary-700: #001947;}
-@theme {--color-tertiary-800: #00122f;}
-@theme {--color-tertiary-900: #000c1a;}
-@theme {--color-tertiary-950: #00060d;}
+@theme {--color-tertiary-50:  #f7f7f7;}
+@theme {--color-tertiary-100: #ededed;}
+@theme {--color-tertiary-200: #dddddd;}
+@theme {--color-tertiary-300: #c6c6c6;}
+@theme {--color-tertiary-400: #9f9f9f;}
+@theme {--color-tertiary-500: #7d7d7d;}
+@theme {--color-tertiary-600: #626262;}
+@theme {--color-tertiary-700: #4a4a4a;}
+@theme {--color-tertiary-800: #333333;}
+@theme {--color-tertiary-900: #1f1f1f;}
+@theme {--color-tertiary-950: #0f0f0f;}
 
 @theme {--color-info-50: #eff6ff;}
 @theme {--color-info-100: #dbeafe;}
@@ -88,28 +88,25 @@
 @theme {--color-destructive-950: #2b0009;}
 
 @theme {
-  --color-background: #F6F5F7;  /* light mode */
-  --color-foreground: #1F1F1F;  /* light mode */
+  --color-background: #eeeeee;  /* light mode */
+  --color-foreground: #101010;  /* light mode */
   --color-bg-card: #ffffff;  /* light mode */
-  --color-border-card: #ffffff;  /* light mode */
+  --color-border-card: #e3e3e3;  /* light mode */
 
-    --font-primary: "Work Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
-               Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji",
-               "Segoe UI Emoji", sans-serif;
+  --font-primary:"Montserrat", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
 
-  /* Secondary font (e.g., for headings) */
-  --font-secondary: "Poppins", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
-                    Roboto, "Helvetica Neue", Arial, "Noto Sans",
-                    "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+  --font-secondary: var(--font-sora), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
 
 }
 
 /* Class override so a `.dark` class wins regardless of system */
 :root.dark {
-  --color-background: #111111;
-  --color-foreground: #FFFEFC;
-  --color-bg-card: #222222;
-  --color-border-card: #444444;
+  --color-background: #101010;
+  --color-foreground: #f8f8f8;
+  --color-bg-card: #181818;
+  --color-border-card: #303030;
 }
 
 

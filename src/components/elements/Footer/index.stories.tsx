@@ -123,7 +123,7 @@ export const TwoColumnsAndCustomSocial: Story = {
               </li>
               <li>
                 <a className="hover:underline underline-offset-4" href="#">
-                  Planos
+                  Pacotes
                 </a>
               </li>
               <li>
