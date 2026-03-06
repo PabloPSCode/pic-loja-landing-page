@@ -33,6 +33,7 @@ import {
   WhatsappLogoIcon,
 } from "@phosphor-icons/react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const featureIcons = {
@@ -45,6 +46,8 @@ export default function Home() {
   } as const;
 
   const handleSeePlanDetails = () => undefined;
+
+  const navigate = useRouter();
 
   return (
     <div className="min-h-screen bg-background text-foreground" id="topo">
@@ -72,6 +75,7 @@ export default function Home() {
                   className="!rounded-md !bg-foreground !px-6 !py-4 !text-white hover:!bg-tertiary-800"
                   label={landingPageContent.hero.cta}
                   type="button"
+                  onClick={() => navigate.push("/start")}
                 />
               </div>
 
@@ -158,6 +162,7 @@ export default function Home() {
                     className="mt-8 !rounded-md !bg-primary-600 !px-6 !py-4 !text-foreground hover:!bg-primary-700"
                     label={landingPageContent.about.button}
                     type="button"
+                    onClick={() => navigate.push("/start")}
                   />
                 </div>
               </RevealContainer>
