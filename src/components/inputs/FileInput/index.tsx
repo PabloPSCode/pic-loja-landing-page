@@ -1,5 +1,6 @@
 'use client';
 
+import clsx from "clsx";
 import { forwardRef, type ChangeEvent, type InputHTMLAttributes } from "react";
 
 interface FileInputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -11,23 +12,54 @@ interface FileInputProps extends InputHTMLAttributes<HTMLInputElement> {
   buttonTitle?: string;
   /** Função a ser chamada ao fazer upload do arquivo */
   onUpload?: (event: ChangeEvent<HTMLInputElement>) => void;
+  /** Classes adicionais para o contêiner */
+  containerClassName?: string;
+  /** Classes adicionais para o rótulo */
+  labelClassName?: string;
+  /** Classes adicionais para o texto de instrução */
+  instructionClassName?: string;
+  /** Classes adicionais para o botão visual do input */
+  buttonClassName?: string;
 }
 
 /** Componente de input de arquivo com texto de instrução.*/
 const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
-  ({ label, instructionText, buttonTitle, onUpload, ...rest }, ref) => {
+  (
+    {
+      label,
+      instructionText,
+      buttonTitle,
+      onUpload,
+      containerClassName,
+      labelClassName,
+      instructionClassName,
+      buttonClassName,
+      ...rest
+    },
+    ref
+  ) => {
     return (
-      <div className="flex flex-col w-full">
-        <span className="text-foreground text-xs sm:text-sm lg:text-sm mb-1">
+      <div className={clsx("flex w-full flex-col", containerClassName)}>
+        <span
+          className={clsx(
+            "mb-1 text-xs text-foreground sm:text-sm lg:text-sm",
+            labelClassName
+          )}
+        >
           {label}
         </span>
         {instructionText && (
-          <span className="text-foreground/70 text-xs sm:text-sm lg:text-sm mb-1 ">
+          <span
+            className={clsx(
+              "mb-1 text-xs text-foreground/70 sm:text-sm lg:text-sm",
+              instructionClassName
+            )}
+          >
             {instructionText}
           </span>
         )}
         <input
-          className="opacity-0 mb-[-3rem] cursor-pointer z-10 w-full h-[3rem]"
+          className="z-10 mb-[-3rem] h-[3rem] w-full cursor-pointer opacity-0"
           ref={ref}
           onChange={onUpload}
           type="file"
@@ -35,7 +67,12 @@ const FileInput = forwardRef<HTMLInputElement, FileInputProps>(
         />
         <button
           type="button"
-          className="w-full h-[3rem] flex items-center justify-center bg-gray-200 font-medium rounded-lg border border-black text-black text-xs sm:text-sm"
+          className={clsx(
+            "flex h-[3rem] w-full items-center justify-center rounded-lg border text-xs font-medium transition-colors sm:text-sm",
+            "border-foreground/15 bg-tertiary-100 text-foreground hover:bg-tertiary-200",
+            "dark:border-foreground/20 dark:bg-tertiary-800 dark:hover:bg-tertiary-700",
+            buttonClassName
+          )}
         >
           {buttonTitle ? buttonTitle : "Selecione um arquivo"}
         </button>
