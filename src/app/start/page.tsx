@@ -2,6 +2,7 @@
 
 import NoImageCard from "@/components/cards/NoImageCard";
 import ProductManageCard from "@/components/cards/ProductManageCard";
+import SimpleProductCard from "@/components/cards/SimpleProductCard";
 import UserCard from "@/components/cards/UserCard";
 import StepIndicator from "@/components/miscellaneous/StepIndicator";
 import { mockedProductData, mockUserData } from "@/mocks";
@@ -11,8 +12,16 @@ import {
   MagicWandIcon,
 } from "@phosphor-icons/react";
 import clsx from "clsx";
-import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ChangeEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import LoginModal from "./components/LoginModal";
+import ShareControllerCard from "@/components/cards/ShareControllerCard";
 
 const TOTAL_STEPS = 3;
 
@@ -41,6 +50,7 @@ export default function Start() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [userData] = useState<IUserData>(mockUserData);
+  const [isProductSaved, setIsProductSaved] = useState(false);
   const generationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -153,9 +163,22 @@ export default function Start() {
     setShowAuthModal((prev) => !prev);
   };
 
-  const handleSaveProduct = (updatedProduct: IProductData) => {
-    setProductData(updatedProduct);
-    console.log("Saved product:", updatedProduct);
+  const handleSaveProduct = useCallback(
+    (updatedProduct: IProductData) => {
+      setProductData(updatedProduct);
+      setIsProductSaved(true);
+      console.log("Saved product:", updatedProduct);
+    },
+    [isProductSaved, productData],
+  );
+
+  const generateProductImage = () => {
+    //GENERATE IMAGE USING CANVAS BASED ON productData
+    console.log("Gerar imagem do produto:", productData);
+  };
+
+  const handleShare = () => {
+    console.log("Compartilhar produto:", productData);
   };
 
   return (
@@ -230,7 +253,7 @@ export default function Start() {
               </p>
             </div>
           </section>
-        ) : activeStep === "result" ? (
+        ) : activeStep === "result" && !isProductSaved ? (
           <section className="w-full rounded-xl border border-foreground/10 bg-bg-card p-5 shadow-sm sm:p-8">
             <h3 className="text-base font-semibold text-foreground sm:text-xl">
               Resultado do produto
@@ -240,6 +263,24 @@ export default function Start() {
               product={productData}
               onChange={setProductData}
               onSave={handleSaveProduct}
+            />
+          </section>
+        ) : activeStep === "result" && isProductSaved ? (
+          <section className="w-full rounded-xl border border-foreground/10 bg-bg-card p-5 shadow-sm sm:p-8">
+            <h3 className="text-base font-semibold text-foreground sm:text-xl mb-4">
+              Produto salvo com sucesso!
+            </h3>
+
+            <SimpleProductCard
+              title={productData.title}
+              description={productData.description as never}
+              imgUrl={productData.imgUrl}
+              price={productData.price}
+            />
+            <ShareControllerCard
+              title="Compartilhe seu produto"
+              onSave={generateProductImage}
+              onShare={generateProductImage}
             />
           </section>
         ) : null}
