@@ -7,23 +7,17 @@ import Button from "@/components/buttons/Button";
 import DealCard from "@/components/cards/DealCard";
 import InfoCard from "@/components/cards/InfoCard";
 import TestimonialCard from "@/components/cards/TestimonialCard";
-import Footer from "@/components/elements/Footer";
 import { HeroSection } from "@/components/elements/HeroSection";
-import LandingHeader from "@/components/elements/LandingHeader";
 import { Section } from "@/components/elements/Section";
 import { Accordeon } from "@/components/miscellaneous/Accordeon";
 import Paragraph from "@/components/typography/Paragraph";
 import Subtitle from "@/components/typography/Subtitle";
 import Title from "@/components/typography/Title";
 import {
-  footerContactItems,
-  footerLegalItems,
-  footerNavigationItems,
   landingFaq,
   landingFeatures,
   landingHighlights,
   landingImages,
-  landingNavItems,
   landingPageContent,
   landingPlans,
   landingSteps,
@@ -39,11 +33,8 @@ import {
   WhatsappLogoIcon,
 } from "@phosphor-icons/react";
 import Image from "next/image";
-import { useState } from "react";
 
 export default function Home() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
   const featureIcons = {
     camera: CameraIcon,
     idCard: IdentificationCardIcon,
@@ -53,76 +44,10 @@ export default function Home() {
     pencil: PencilSimpleLineIcon,
   } as const;
 
-  const closeMobileMenu = () => {
-    setIsMobileMenuOpen(false);
-  };
-
   const handleSeePlanDetails = () => undefined;
 
   return (
     <div className="min-h-screen bg-background text-foreground" id="topo">
-      <LandingHeader.Root
-        className="relative border-none bg-primary-500"
-        size="lg"
-        sticky={false}
-      >
-        <LandingHeader.Left className="gap-4">
-          <LandingHeader.Logo
-            alt={landingImages.logoText.alt}
-            className="!h-8 sm:!h-9 lg:!h-10"
-            src={landingImages.logoText.src}
-          />
-        </LandingHeader.Left>
-
-        <LandingHeader.Center>
-          <LandingHeader.Nav className="justify-center gap-5 lg:gap-8">
-            {landingNavItems.map((item) => (
-              <LandingHeader.Nav.Item
-                href={item.href}
-                key={item.href}
-                onClick={closeMobileMenu}
-              >
-                {item.label}
-              </LandingHeader.Nav.Item>
-            ))}
-          </LandingHeader.Nav>
-        </LandingHeader.Center>
-
-        <LandingHeader.Right className="gap-3">
-          <LandingHeader.MobileMenuToggle
-            className="text-foreground"
-            onToggle={
-              ((open: boolean) => {
-                setIsMobileMenuOpen(open);
-              }) as never
-            }
-            open={isMobileMenuOpen}
-            type="button"
-          />
-        </LandingHeader.Right>
-
-        <LandingHeader.MobileMenuPanel
-          cta={
-            <LandingHeader.CTA
-              className="w-full !justify-center !rounded-lg !bg-foreground !py-3 !text-white"
-              label={landingPageContent.header.cta}
-              type="button"
-            />
-          }
-          open={isMobileMenuOpen}
-        >
-          {landingNavItems.map((item) => (
-            <LandingHeader.Nav.Item
-              href={item.href}
-              key={`mobile-${item.href}`}
-              onClick={closeMobileMenu}
-            >
-              {item.label}
-            </LandingHeader.Nav.Item>
-          ))}
-        </LandingHeader.MobileMenuPanel>
-      </LandingHeader.Root>
-
       <main className="overflow-x-hidden">
         <HeroSection
           sectionClassName="relative overflow-hidden bg-gradient-to-r from-primary-500 to-secondary-500 px-0 py-0"
@@ -473,75 +398,6 @@ export default function Home() {
               </RevealContainer>
             </div>
           </Section>
-        </div>
-      </main>
-
-      <Footer.Root bordered={false} className="bg-background" id="contato">
-        <Footer.Top className="gap-8 !py-14" columns={4}>
-          <Footer.Column className="items-start">
-            <div className="flex flex-col items-start gap-5">
-              <div className="flex items-center gap-3">
-                <Image
-                  alt={landingImages.logoText.alt}
-                  className="h-auto w-auto"
-                  height={44}
-                  src={landingImages.logoText.src}
-                  width={190}
-                />
-              </div>
-              <Paragraph
-                className="max-w-xs text-sm leading-7 text-foreground/70 sm:text-base font-normal"
-                content={landingPageContent.footer.description}
-              />
-              <div className="space-y-2">
-                {footerContactItems.map((item) =>
-                  item.href ? (
-                    <a
-                      className="block text-sm text-foreground/75 transition hover:text-foreground hover:underline"
-                      href={item.href}
-                      key={item.label}
-                    >
-                      {item.label}
-                    </a>
-                  ) : (
-                    <span
-                      className="block text-sm text-foreground/75"
-                      key={item.label}
-                    >
-                      {item.label}
-                    </span>
-                  ),
-                )}
-              </div>
-            </div>
-          </Footer.Column>
-
-          <Footer.Column
-            className="items-start"
-            items={footerNavigationItems}
-            title={landingPageContent.footer.navigationTitle}
-          />
-
-          <Footer.Column
-            className="items-start"
-            items={footerLegalItems}
-            title={landingPageContent.footer.legalTitle}
-          />
-        </Footer.Top>
-
-        <Footer.Bottom bordered className="bg-white/45">
-          <div className="flex w-full flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
-            <span>
-              Desenvolvido por{" "}
-              <a
-                href="https://www.plssistemas.com.br"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                PLS Sistemas
-              </a>
-            </span>
-          </div>
           <a
             className="fixed bottom-10 right-10 h-12 sm:h-16 bg-success-500 rounded-full flex items-center justify-center gap-3 shadow-lg hover:shadow-[0_10px_30px_rgba(0,0,0,0.18)] transition cursor-pointer p-4"
             href="https://wa.send"
@@ -554,8 +410,8 @@ export default function Home() {
               weight="thin"
             />
           </a>
-        </Footer.Bottom>
-      </Footer.Root>
+        </div>
+      </main>
     </div>
   );
 }

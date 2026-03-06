@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { Sora, Montserrat } from "next/font/google";
-import { landingPageContent } from "@/mocks/piclojaLanding";
+import { Montserrat, Sora } from "next/font/google";
+import LayoutShell from "./layout-shell";
+import { metadata as appMetadata } from "./metadata";
 import "../styles/globals.css";
 
 const montserrat = Montserrat({
@@ -13,10 +14,7 @@ const sora = Sora({
   variable: "--font-sora",
 });
 
-export const metadata: Metadata = {
-  title: landingPageContent.meta.title,
-  description: landingPageContent.meta.description,
-};
+export const metadata: Metadata = appMetadata;
 
 export default function RootLayout({
   children,
@@ -28,7 +26,7 @@ export default function RootLayout({
       <body
         className={`${montserrat.variable} ${sora.variable} bg-background text-foreground antialiased`}
       >
-        {children}
+        <LayoutShell>{children}</LayoutShell>
       </body>
     </html>
   );

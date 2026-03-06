@@ -249,9 +249,9 @@ export const landingPlans: LandingPlan[] = [
   {
     buttonTitle: "Escolher Avançado",
     currentPrice: "R$ 19,90/mês",
-    discountPercentage: 50,
-    isBestOption: true,
-    oldPrice: "R$ 39,90/mês",
+    discountPercentage: 35,
+    isBestOption: false,
+    oldPrice: "R$ 29,90/mês",
     resources: [
       "Até 200 créditos por mês",
       "Tratamento visual avançado",
@@ -264,9 +264,9 @@ export const landingPlans: LandingPlan[] = [
   {
     buttonTitle: "Escolher Profissional",
     currentPrice: "R$ 29,90/mês",
-    discountPercentage: 35,
-    isBestOption: false,
-    oldPrice: "R$ 44,90/mês",
+    discountPercentage: 50,
+    isBestOption: true,
+    oldPrice: "R$ 59,90/mês",
     resources: [
       "Até 1.000 créditos por mês",
       "Tratamento visual avançado",
