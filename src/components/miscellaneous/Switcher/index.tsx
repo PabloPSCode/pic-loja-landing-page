@@ -41,6 +41,7 @@ export default function Switcher({
           onChange={onChange}
           offColor="#d0d0d0"
           onColor={primaryColor}
+          onHandleColor="#19ce6a"
           uncheckedIcon={false}
           checkedIcon={false}
           height={20}
@@ -57,4 +58,3 @@ export default function Switcher({
     </div>
   );
 }
-

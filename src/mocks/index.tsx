@@ -990,3 +990,19 @@ export const plans = [
     ],
   },
 ];
+
+export const mockUserData = {
+  name: "João Silva",
+  usedCredits: 3,
+  totalCredits: 10,
+};
+
+export const mockedProductData = {
+  price: "R$ 79,90",
+  title: "Tênis esportivo",
+  imgUrl:
+    "https://images.unsplash.com/photo-1503602642458-232111445657?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MH",
+  bgColor: "#c2c2c2",
+  description:
+    "Tênis de alta qualidade, ideal para corridas e atividades físicas. Confortável e durável, com design moderno.",
+};

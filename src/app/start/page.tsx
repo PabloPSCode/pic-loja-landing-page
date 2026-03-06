@@ -1,33 +1,62 @@
 "use client";
 
 import NoImageCard from "@/components/cards/NoImageCard";
+import ProductManageCard from "@/components/cards/ProductManageCard";
+import UserCard from "@/components/cards/UserCard";
 import StepIndicator from "@/components/miscellaneous/StepIndicator";
+import { mockedProductData, mockUserData } from "@/mocks";
 import {
   CameraIcon,
   CircleNotchIcon,
   MagicWandIcon,
 } from "@phosphor-icons/react";
 import clsx from "clsx";
-import { type ChangeEvent, useEffect, useMemo, useState } from "react";
+import { type ChangeEvent, useEffect, useMemo, useRef, useState } from "react";
 import LoginModal from "./components/LoginModal";
 
 const TOTAL_STEPS = 3;
 
 type ActiveStep = "upload" | "generate" | "result";
 
+interface IUserData {
+  name: string;
+  usedCredits: number;
+  totalCredits: number;
+}
+
+interface IProductData {
+  title: string;
+  imgUrl: string;
+  description: string;
+  price: string;
+  showPrice?: boolean;
+  bgColor: string;
+}
+
 export default function Start() {
+  const [activeStep, setActiveStep] = useState<ActiveStep>("upload");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-
-  const [activeStep, setActiveStep] = useState<ActiveStep>("upload");
+  const [userData] = useState<IUserData>(mockUserData);
+  const generationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const [productData, setProductData] = useState<IProductData>({
+    ...mockedProductData,
+    showPrice: Boolean(mockedProductData.price),
+  });
 
   useEffect(() => {
     return () => {
       if (previewUrl) {
         URL.revokeObjectURL(previewUrl);
+      }
+
+      if (generationTimeoutRef.current) {
+        clearTimeout(generationTimeoutRef.current);
       }
     };
   }, [previewUrl]);
@@ -75,6 +104,23 @@ export default function Start() {
     setIsGenerating(false);
   };
 
+  const startProductGeneration = () => {
+    if (!uploadedFile) return;
+
+    setActiveStep("generate");
+    setIsGenerating(true);
+
+    if (generationTimeoutRef.current) {
+      clearTimeout(generationTimeoutRef.current);
+    }
+
+    generationTimeoutRef.current = setTimeout(() => {
+      setIsGenerating(false);
+      setActiveStep("result");
+      generationTimeoutRef.current = null;
+    }, 3000);
+  };
+
   const handleGenerateProduct = () => {
     if (!uploadedFile) return;
 
@@ -83,8 +129,7 @@ export default function Start() {
       return;
     }
 
-    setActiveStep("generate");
-    setIsGenerating(true);
+    startProductGeneration();
   };
 
   const mapActiveStepToIndex = (step: ActiveStep) => {
@@ -101,16 +146,28 @@ export default function Start() {
   const handleAuthenticate = () => {
     setIsAuthenticated(true);
     setShowAuthModal(false);
-    handleGenerateProduct();
+    startProductGeneration();
   };
 
   const handleToggleAuthModal = () => {
     setShowAuthModal((prev) => !prev);
   };
 
+  const handleSaveProduct = (updatedProduct: IProductData) => {
+    setProductData(updatedProduct);
+    console.log("Saved product:", updatedProduct);
+  };
+
   return (
     <main className="min-h-[60vh] w-full bg-white/50 px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 sm:gap-6">
+        {isAuthenticated && (
+          <UserCard
+            userName={userData.name}
+            usedCredits={userData.usedCredits}
+            totalCredits={userData.totalCredits}
+          />
+        )}
         <StepIndicator
           currentStep={mapActiveStepToIndex(activeStep)}
           stepIcon={stepConfig.icon}
@@ -150,7 +207,7 @@ export default function Start() {
                 : null
             }
           />
-        ) : (
+        ) : activeStep === "generate" ? (
           <section className="w-full rounded-xl border border-foreground/10 bg-bg-card p-5 shadow-sm sm:p-8">
             <h3 className="text-base font-semibold text-foreground sm:text-xl">
               Geração do produto
@@ -173,7 +230,19 @@ export default function Start() {
               </p>
             </div>
           </section>
-        )}
+        ) : activeStep === "result" ? (
+          <section className="w-full rounded-xl border border-foreground/10 bg-bg-card p-5 shadow-sm sm:p-8">
+            <h3 className="text-base font-semibold text-foreground sm:text-xl">
+              Resultado do produto
+            </h3>
+
+            <ProductManageCard
+              product={productData}
+              onChange={setProductData}
+              onSave={handleSaveProduct}
+            />
+          </section>
+        ) : null}
       </div>
       {showAuthModal && (
         <LoginModal
