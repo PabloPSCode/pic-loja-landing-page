@@ -4,18 +4,18 @@ import GenericModal from "@/components/modals/GenericModal";
 interface LoginModalProps {
   open: boolean;
   onClose: () => void;
-  onAuthenticated?: () => void;
+  onAuthenticate?: () => void;
 }
 
 export default function LoginModal({
   open,
   onClose,
-  onAuthenticated,
+  onAuthenticate,
 }: LoginModalProps) {
   const handleAuthenticated = (e: React.FormEvent) => {
     e.preventDefault();
-    if (onAuthenticated) {
-      onAuthenticated();
+    if (onAuthenticate) {
+      onAuthenticate();
     }
   };
 

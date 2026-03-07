@@ -55,7 +55,8 @@
     "react-verification-input": "^4.2.2",
     "recharts": "^3.2.1",
     "swiper": "^11.2.10",
-    "three": "^0.182.0"
+    "three": "^0.182.0",
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^4.1.1",

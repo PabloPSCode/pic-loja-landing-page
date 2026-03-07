@@ -991,7 +991,7 @@ export const plans = [
   },
 ];
 
-export const mockUserData = {
+export const mockedUserData = {
   name: "João Silva",
   usedCredits: 3,
   totalCredits: 10,

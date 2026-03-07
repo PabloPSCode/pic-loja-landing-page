@@ -8,7 +8,8 @@ import ShareControllerCard, {
 import SimpleProductCard from "@/components/cards/SimpleProductCard";
 import UserCard from "@/components/cards/UserCard";
 import StepIndicator from "@/components/miscellaneous/StepIndicator";
-import { mockedProductData, mockUserData } from "@/mocks";
+import { mockedProductData, mockedUserData } from "@/mocks";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   CameraIcon,
   CircleNotchIcon,
@@ -38,14 +39,21 @@ interface IUserData {
 }
 
 export default function Start() {
+
+  const authenticatedUser = useAuthStore((state) => state.user);
+
   const [activeStep, setActiveStep] = useState<ActiveStep>("upload");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isProductGenerated, setIsProductGenerated] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  // const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [userData] = useState<IUserData>(mockUserData);
+  const [userData] = useState<IUserData>({
+    name: authenticatedUser?.name || "Usuário",
+    usedCredits: mockedUserData.usedCredits,
+    totalCredits: mockedUserData.totalCredits,
+  });
   const [isProductSaved, setIsProductSaved] = useState(false);
   const generationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
@@ -54,6 +62,8 @@ export default function Start() {
     ...mockedProductData,
     showPrice: Boolean(mockedProductData.price),
   });
+
+  const logUserIn = useAuthStore(state => state.login)
 
   useEffect(() => {
     return () => {
@@ -149,9 +159,8 @@ export default function Start() {
   const handleGenerateProduct = () => {
     if (!uploadedFile) return;
 
-    if (!isAuthenticated) {
+    if (!authenticatedUser) {
       setShowAuthModal(true);
-      return;
     }
 
     startProductGeneration();
@@ -171,7 +180,7 @@ export default function Start() {
   };
 
   const handleAuthenticate = () => {
-    setIsAuthenticated(true);
+    logUserIn("User Name", "user@example.com");
     setShowAuthModal(false);
     startProductGeneration();
   };
@@ -209,10 +218,8 @@ export default function Start() {
   return (
     <main className="min-h-[60vh] w-full bg-white/50 px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 sm:gap-6">
-        {isAuthenticated && (
+        {authenticatedUser && (
           <UserCard
-            actionHref="/my-products"
-            actionLabel="Meus produtos"
             userName={userData.name}
             usedCredits={userData.usedCredits}
             totalCredits={userData.totalCredits}
@@ -315,11 +322,11 @@ export default function Start() {
           </section>
         ) : null}
       </div>
-      {showAuthModal && (
+      {showAuthModal && !authenticatedUser && (
         <LoginModal
           open={showAuthModal}
           onClose={handleToggleAuthModal}
-          onAuthenticated={handleAuthenticate}
+          onAuthenticate={handleAuthenticate}
         />
       )}
     </main>

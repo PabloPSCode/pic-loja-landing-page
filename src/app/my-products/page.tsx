@@ -2,9 +2,24 @@
 
 import SimpleProductCard from "@/components/cards/SimpleProductCard";
 import UserCard from "@/components/cards/UserCard";
-import { mockGeneratedProducts, mockUserData } from "@/mocks";
+import { mockedUserData, mockGeneratedProducts } from "@/mocks";
+import { useAuthStore } from "@/stores/auth-store";
 
 export default function MyProducts() {
+  const user = useAuthStore((state) => state.user);
+
+  if (!user) {
+    return (
+      <main className="min-h-[60vh] w-full bg-white/50 px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 sm:gap-6 items-center">
+          <h1 className="text-center text-xl font-semibold text-foreground sm:text-2xl mt-12">
+            Você precisa estar logado para acessar esta página.
+          </h1>
+        </div>
+      </main>
+    );
+  }
+
   const handleSave = (productId: string) => {
     console.log("Salvar imagem do produto:", productId);
   };
@@ -17,9 +32,9 @@ export default function MyProducts() {
     <main className="min-h-[60vh] w-full bg-white/50 px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 sm:gap-6">
         <UserCard
-          userName={mockUserData.name}
-          usedCredits={mockUserData.usedCredits}
-          totalCredits={mockUserData.totalCredits}
+          userName={user.name}
+          usedCredits={mockedUserData.usedCredits}
+          totalCredits={mockedUserData.totalCredits}
         />
 
         <section className="w-full rounded-xl border border-foreground/10 bg-bg-card p-5 shadow-sm sm:p-8">
