@@ -2,6 +2,7 @@
 
 import { formatBRL } from "@/utils/format";
 import clsx from "clsx";
+import { DownloadSimpleIcon, ShareNetworkIcon } from "@phosphor-icons/react";
 import Image from "next/image";
 
 export interface SimpleProductCardProps {
@@ -21,6 +22,18 @@ export interface SimpleProductCardProps {
   titleClassName?: string;
   /** Classes adicionais do preço */
   priceClassName?: string;
+  /** Callback para salvar a imagem do produto */
+  onSave?: () => void;
+  /** Callback para compartilhar a imagem do produto */
+  onShare?: () => void;
+  /** Texto do botão de salvar */
+  saveLabel?: string;
+  /** Texto do botão de compartilhar */
+  shareLabel?: string;
+  /** Desabilita o botão de salvar */
+  saveDisabled?: boolean;
+  /** Desabilita o botão de compartilhar */
+  shareDisabled?: boolean;
 }
 
 const DEFAULT_BACKGROUND_COLOR = "#c2c2c2";
@@ -62,8 +75,15 @@ export default function SimpleProductCard({
   className,
   titleClassName,
   priceClassName,
+  onSave,
+  onShare,
+  saveLabel = "Salvar imagem",
+  shareLabel = "Compartilhar imagem",
+  saveDisabled = false,
+  shareDisabled = false,
 }: SimpleProductCardProps) {
   const formattedPrice = formatProductPrice(price);
+  const hasActions = Boolean(onSave || onShare);
 
   return (
     <section
@@ -89,7 +109,7 @@ export default function SimpleProductCard({
           </div>
         </div>
 
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-1 flex-col gap-3">
           <h2
             className={clsx(
               "text-lg font-semibold text-foreground sm:text-xl",
@@ -106,8 +126,46 @@ export default function SimpleProductCard({
           >
             {formattedPrice}
           </p>
+          <p className="text-xs text-foreground/75 sm:text-base">
+            {description}
+          </p>
         </div>
-        <p className="text-xs text-foreground/75 sm:text-base">{description}</p>
+
+        {hasActions && (
+          <div className="flex w-full flex-col gap-3 sm:w-[188px] sm:shrink-0">
+            {onSave && (
+              <button
+                className={clsx(
+                  "inline-flex w-full items-center justify-center gap-2 rounded-md px-4 py-3",
+                  "bg-primary-500 text-sm font-semibold text-foreground transition-colors hover:bg-primary-400",
+                  "disabled:cursor-not-allowed disabled:opacity-60",
+                )}
+                disabled={saveDisabled}
+                onClick={onSave}
+                type="button"
+              >
+                <DownloadSimpleIcon size={18} weight="bold" />
+                {saveLabel}
+              </button>
+            )}
+
+            {onShare && (
+              <button
+                className={clsx(
+                  "inline-flex w-full items-center justify-center gap-2 rounded-md px-4 py-3",
+                  "bg-primary-500 text-sm font-semibold text-foreground transition-colors hover:bg-primary-400",
+                  "disabled:cursor-not-allowed disabled:opacity-60",
+                )}
+                disabled={shareDisabled}
+                onClick={onShare}
+                type="button"
+              >
+                <ShareNetworkIcon size={18} weight="bold" />
+                {shareLabel}
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </section>
   );

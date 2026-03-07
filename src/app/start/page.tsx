@@ -2,6 +2,9 @@
 
 import NoImageCard from "@/components/cards/NoImageCard";
 import ProductManageCard from "@/components/cards/ProductManageCard";
+import ShareControllerCard, {
+  IProductData,
+} from "@/components/cards/ShareControllerCard";
 import SimpleProductCard from "@/components/cards/SimpleProductCard";
 import UserCard from "@/components/cards/UserCard";
 import StepIndicator from "@/components/miscellaneous/StepIndicator";
@@ -10,6 +13,7 @@ import {
   CameraIcon,
   CircleNotchIcon,
   MagicWandIcon,
+  ShareNetworkIcon,
 } from "@phosphor-icons/react";
 import clsx from "clsx";
 import {
@@ -21,7 +25,6 @@ import {
   useState,
 } from "react";
 import LoginModal from "./components/LoginModal";
-import ShareControllerCard from "@/components/cards/ShareControllerCard";
 
 const TOTAL_STEPS = 3;
 
@@ -33,20 +36,12 @@ interface IUserData {
   totalCredits: number;
 }
 
-interface IProductData {
-  title: string;
-  imgUrl: string;
-  description: string;
-  price: string;
-  showPrice?: boolean;
-  bgColor: string;
-}
-
 export default function Start() {
   const [activeStep, setActiveStep] = useState<ActiveStep>("upload");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isProductGenerated, setIsProductGenerated] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [userData] = useState<IUserData>(mockUserData);
@@ -79,9 +74,16 @@ export default function Start() {
       };
     }
 
+    if (activeStep === "generate") {
+      return {
+        icon: <MagicWandIcon size={22} weight="fill" />,
+        title: "Geração do produto",
+      };
+    }
+
     return {
-      icon: <MagicWandIcon size={22} weight="fill" />,
-      title: "Geração de produto",
+      icon: <ShareNetworkIcon size={22} weight="fill" />,
+      title: "Compartilhamento",
     };
   }, [activeStep]);
 
@@ -126,7 +128,7 @@ export default function Start() {
 
     generationTimeoutRef.current = setTimeout(() => {
       setIsGenerating(false);
-      setActiveStep("result");
+      setIsProductGenerated(true);
       generationTimeoutRef.current = null;
     }, 3000);
   };
@@ -150,6 +152,8 @@ export default function Start() {
         return 2;
       case "result":
         return 3;
+      default:
+        return 1;
     }
   };
 
@@ -167,6 +171,7 @@ export default function Start() {
     (updatedProduct: IProductData) => {
       setProductData(updatedProduct);
       setIsProductSaved(true);
+      setActiveStep("result");
       console.log("Saved product:", updatedProduct);
     },
     [isProductSaved, productData],
@@ -180,6 +185,8 @@ export default function Start() {
   const handleShare = () => {
     console.log("Compartilhar produto:", productData);
   };
+
+
 
   return (
     <main className="min-h-[60vh] w-full bg-white/50 px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
@@ -230,7 +237,7 @@ export default function Start() {
                 : null
             }
           />
-        ) : activeStep === "generate" ? (
+        ) : activeStep === "generate" && !isProductGenerated ? (
           <section className="w-full rounded-xl border border-foreground/10 bg-bg-card p-5 shadow-sm sm:p-8">
             <h3 className="text-base font-semibold text-foreground sm:text-xl">
               Geração do produto
@@ -253,7 +260,7 @@ export default function Start() {
               </p>
             </div>
           </section>
-        ) : activeStep === "result" && !isProductSaved ? (
+        ) : activeStep === "generate" && isProductGenerated ? (
           <section className="w-full rounded-xl border border-foreground/10 bg-bg-card p-5 shadow-sm sm:p-8">
             <h3 className="text-base font-semibold text-foreground sm:text-xl">
               Resultado do produto
@@ -279,8 +286,8 @@ export default function Start() {
             />
             <ShareControllerCard
               title="Compartilhe seu produto"
-              onSave={generateProductImage}
-              onShare={generateProductImage}
+              onSave={handleSaveProduct}
+              onShare={handleShare}
             />
           </section>
         ) : null}
