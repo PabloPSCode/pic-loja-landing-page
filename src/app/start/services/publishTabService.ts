@@ -14,7 +14,6 @@ import {
 
 const CANVAS_WIDTH = 1080;
 const CANVAS_HEIGHT = 1350;
-const IMAGE_FRAME_COLOR = "#8b3dff";
 const PAGE_BACKGROUND = "#ffffff";
 const DESCRIPTION_COLOR = "#5b5b5b";
 const IMAGE_BACKGROUND = "#d6d6d6";
@@ -56,16 +55,6 @@ export class PublishTabService {
       height: 640,
       radius: 28,
       fillStyle: product.bgColor || IMAGE_BACKGROUND,
-    });
-
-    drawRoundedRect(ctx, {
-      x: 94,
-      y: 94,
-      width: 892,
-      height: 580,
-      radius: 24,
-      strokeStyle: IMAGE_FRAME_COLOR,
-      lineWidth: 8,
     });
 
     drawImageContain(ctx, image, 120, 120, 840, 530);

@@ -55,6 +55,7 @@ export interface ProductManageCardProps {
 }
 
 const DEFAULT_BACKGROUND_COLOR = "#c2c2c2";
+const DEFAULT_TRANSPARENT_BACKGROUND_COLOR = "#FFFFFF";
 const MAX_DESCRIPTION_LENGTH = 500;
 
 function hasInitialPrice(price?: string | number) {
@@ -109,6 +110,7 @@ export default function ProductManageCard({
   const [description, setDescription] = useState(product.description ?? "");
   const [price, setPrice] = useState(normalizeInitialPrice(product.price));
   const [showPrice, setShowPrice] = useState(resolveInitialShowPrice(product));
+  const [bgTransparent, setBgTransparent] = useState(false);
   const [bgColor, setBgColor] = useState(
     product.bgColor ?? DEFAULT_BACKGROUND_COLOR,
   );
@@ -138,6 +140,17 @@ export default function ProductManageCard({
     product.title,
     showPrice,
   ]);
+
+  useEffect(() => {
+    if (bgTransparent) {
+      setBgColor(DEFAULT_TRANSPARENT_BACKGROUND_COLOR);
+    }
+  }, [bgTransparent, product.bgColor]);
+
+  const handleChangeBgColor = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setBgColor(event.target.value);
+    setBgTransparent(false);
+  };
 
   const handleSave = () => {
     onSave(buildPayload(product, description, price, showPrice, bgColor));
@@ -218,14 +231,25 @@ export default function ProductManageCard({
               />
             </div>
 
-            <ColorInput
-              className="h-10 w-24 border-border-card bg-background"
-              disabled={disabled}
-              id="product-manage-bg-color"
-              label="Cor do fundo"
-              onChange={(event) => setBgColor(event.target.value)}
-              value={bgColor}
-            />
+            <div className="mb-1 flex items-center gap-3">
+              <ColorInput
+                className="h-10 w-24 border-border-card bg-background"
+                disabled={disabled}
+                id="product-manage-bg-color"
+                label="Cor do fundo"
+                onChange={handleChangeBgColor}
+                value={bgColor}
+              />
+              <span className="text-xs font-medium text-foreground sm:text-sm">
+                Transparente
+              </span>
+              <Switcher
+                checked={bgTransparent}
+                containerClassName="flex items-center"
+                disabled={disabled}
+                onChange={setBgTransparent}
+              />
+            </div>
           </div>
         </div>
 
