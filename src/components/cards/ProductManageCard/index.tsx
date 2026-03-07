@@ -7,7 +7,7 @@ import TextAreaInput from "@/components/inputs/TextAreaInput";
 import Switcher from "@/components/miscellaneous/Switcher";
 import clsx from "clsx";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export interface ProductManageCardProduct {
   /** Título do produto */
@@ -56,7 +56,15 @@ export interface ProductManageCardProps {
 
 const DEFAULT_BACKGROUND_COLOR = "#c2c2c2";
 const DEFAULT_TRANSPARENT_BACKGROUND_COLOR = "#FFFFFF";
-const MAX_DESCRIPTION_LENGTH = 500;
+const MAX_DESCRIPTION_LENGTH = 250;
+
+interface ProductManageCardFormState {
+  description: string;
+  price: string;
+  showPrice: boolean;
+  bgTransparent: boolean;
+  selectedBgColor: string;
+}
 
 function hasInitialPrice(price?: string | number) {
   if (typeof price === "number") {
@@ -82,6 +90,26 @@ function normalizeInitialPrice(price?: string | number) {
   return price ?? "";
 }
 
+function resolveInitialSolidBgColor(bgColor?: string) {
+  if (!bgColor || bgColor === DEFAULT_TRANSPARENT_BACKGROUND_COLOR) {
+    return DEFAULT_BACKGROUND_COLOR;
+  }
+
+  return bgColor;
+}
+
+function resolveFormState(
+  product: ProductManageCardProduct,
+): ProductManageCardFormState {
+  return {
+    description: product.description ?? "",
+    price: normalizeInitialPrice(product.price),
+    showPrice: resolveInitialShowPrice(product),
+    bgTransparent: product.bgColor === DEFAULT_TRANSPARENT_BACKGROUND_COLOR,
+    selectedBgColor: resolveInitialSolidBgColor(product.bgColor),
+  };
+}
+
 function buildPayload(
   product: ProductManageCardProduct,
   description: string,
@@ -99,6 +127,38 @@ function buildPayload(
   };
 }
 
+function buildPayloadFromProduct(product: ProductManageCardProduct) {
+  const formState = resolveFormState(product);
+
+  return buildPayload(
+    product,
+    formState.description,
+    formState.price,
+    formState.showPrice,
+    formState.bgTransparent
+      ? DEFAULT_TRANSPARENT_BACKGROUND_COLOR
+      : formState.selectedBgColor,
+  );
+}
+
+function isSamePayload(
+  left: ProductManageCardSavePayload | null,
+  right: ProductManageCardSavePayload,
+) {
+  if (!left) {
+    return false;
+  }
+
+  return (
+    left.title === right.title &&
+    left.imgUrl === right.imgUrl &&
+    left.description === right.description &&
+    left.price === right.price &&
+    left.showPrice === right.showPrice &&
+    left.bgColor === right.bgColor
+  );
+}
+
 export default function ProductManageCard({
   product,
   onChange,
@@ -107,19 +167,49 @@ export default function ProductManageCard({
   className,
   disabled = false,
 }: ProductManageCardProps) {
-  const [description, setDescription] = useState(product.description ?? "");
-  const [price, setPrice] = useState(normalizeInitialPrice(product.price));
-  const [showPrice, setShowPrice] = useState(resolveInitialShowPrice(product));
-  const [bgTransparent, setBgTransparent] = useState(false);
-  const [bgColor, setBgColor] = useState(
-    product.bgColor ?? DEFAULT_BACKGROUND_COLOR,
+  const initialFormState = resolveFormState(product);
+  const lastEmittedPayloadRef = useRef<ProductManageCardSavePayload | null>(null);
+  const [description, setDescription] = useState(initialFormState.description);
+  const [price, setPrice] = useState(initialFormState.price);
+  const [showPrice, setShowPrice] = useState(initialFormState.showPrice);
+  const [bgTransparent, setBgTransparent] = useState(
+    initialFormState.bgTransparent,
+  );
+  const [selectedBgColor, setSelectedBgColor] = useState(
+    initialFormState.selectedBgColor,
   );
 
+  const previewBgColor = bgTransparent
+    ? DEFAULT_TRANSPARENT_BACKGROUND_COLOR
+    : selectedBgColor;
+
   useEffect(() => {
-    setDescription(product.description ?? "");
-    setPrice(normalizeInitialPrice(product.price));
-    setShowPrice(resolveInitialShowPrice(product));
-    setBgColor(product.bgColor ?? DEFAULT_BACKGROUND_COLOR);
+    const nextPayload = buildPayloadFromProduct(product);
+
+    if (isSamePayload(lastEmittedPayloadRef.current, nextPayload)) {
+      lastEmittedPayloadRef.current = null;
+      return;
+    }
+
+    const nextFormState = resolveFormState(product);
+
+    setDescription((current) =>
+      current === nextFormState.description ? current : nextFormState.description,
+    );
+    setPrice((current) => (current === nextFormState.price ? current : nextFormState.price));
+    setShowPrice((current) =>
+      current === nextFormState.showPrice ? current : nextFormState.showPrice,
+    );
+    setBgTransparent((current) =>
+      current === nextFormState.bgTransparent
+        ? current
+        : nextFormState.bgTransparent,
+    );
+    setSelectedBgColor((current) =>
+      current === nextFormState.selectedBgColor
+        ? current
+        : nextFormState.selectedBgColor,
+    );
   }, [
     product.bgColor,
     product.description,
@@ -129,31 +219,75 @@ export default function ProductManageCard({
     product.title,
   ]);
 
-  useEffect(() => {
-    onChange?.(buildPayload(product, description, price, showPrice, bgColor));
-  }, [
-    bgColor,
-    description,
-    onChange,
-    price,
-    product.imgUrl,
-    product.title,
-    showPrice,
-  ]);
+  const emitChange = ({
+    nextDescription = description,
+    nextPrice = price,
+    nextShowPrice = showPrice,
+    nextSelectedBgColor = selectedBgColor,
+    nextBgTransparent = bgTransparent,
+  }: {
+    nextDescription?: string;
+    nextPrice?: string;
+    nextShowPrice?: boolean;
+    nextSelectedBgColor?: string;
+    nextBgTransparent?: boolean;
+  }) => {
+    const nextBgColor = nextBgTransparent
+      ? DEFAULT_TRANSPARENT_BACKGROUND_COLOR
+      : nextSelectedBgColor;
 
-  useEffect(() => {
-    if (bgTransparent) {
-      setBgColor(DEFAULT_TRANSPARENT_BACKGROUND_COLOR);
+    if (!onChange) {
+      return;
     }
-  }, [bgTransparent, product.bgColor]);
+
+    const nextPayload = buildPayload(
+      product,
+      nextDescription,
+      nextPrice,
+      nextShowPrice,
+      nextBgColor,
+    );
+
+    lastEmittedPayloadRef.current = nextPayload;
+    onChange(nextPayload);
+  };
+
+  const handleDescriptionChange = (
+    event: React.ChangeEvent<HTMLTextAreaElement>,
+  ) => {
+    const nextDescription = event.target.value;
+    setDescription(nextDescription);
+    emitChange({ nextDescription });
+  };
+
+  const handlePriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const nextPrice = event.target.value;
+    setPrice(nextPrice);
+    emitChange({ nextPrice });
+  };
+
+  const handleToggleShowPrice = (checked: boolean) => {
+    setShowPrice(checked);
+    emitChange({ nextShowPrice: checked });
+  };
 
   const handleChangeBgColor = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setBgColor(event.target.value);
+    const nextSelectedBgColor = event.target.value;
+    setSelectedBgColor(nextSelectedBgColor);
     setBgTransparent(false);
+    emitChange({
+      nextSelectedBgColor,
+      nextBgTransparent: false,
+    });
+  };
+
+  const handleToggleTransparent = (checked: boolean) => {
+    setBgTransparent(checked);
+    emitChange({ nextBgTransparent: checked });
   };
 
   const handleSave = () => {
-    onSave(buildPayload(product, description, price, showPrice, bgColor));
+    onSave(buildPayload(product, description, price, showPrice, previewBgColor));
   };
 
   return (
@@ -164,7 +298,7 @@ export default function ProductManageCard({
       <div className="grid w-full gap-5 lg:grid-cols-[232px_minmax(0,1fr)_248px] lg:items-start">
         <div
           className="flex min-h-[168px] items-center justify-center overflow-hidden rounded-lg p-4 border border-border-card"
-          style={{ backgroundColor: bgColor }}
+          style={{ backgroundColor: previewBgColor }}
         >
           <div className="relative h-full min-h-[136px] w-full">
             <Image
@@ -187,7 +321,7 @@ export default function ProductManageCard({
               id="product-manage-description"
               label="Descrição"
               maxTextLength={MAX_DESCRIPTION_LENGTH}
-              onChange={(event) => setDescription(event.target.value)}
+              onChange={handleDescriptionChange}
               placeholder="Descrição do produto, máximo de 100 caracteres"
               showTextLength={false}
               value={description}
@@ -209,7 +343,7 @@ export default function ProductManageCard({
                   checked={showPrice}
                   containerClassName="flex items-center"
                   disabled={disabled}
-                  onChange={setShowPrice}
+                  onChange={handleToggleShowPrice}
                 />
               </div>
 
@@ -225,20 +359,20 @@ export default function ProductManageCard({
                 }
                 id="product-manage-price"
                 label="Preço"
-                onChange={(event) => setPrice(event.target.value)}
+                onChange={handlePriceChange}
                 placeholder="R$ 99,90"
                 value={price}
               />
             </div>
 
-            <div className="mb-1 flex items-center gap-3">
+            <div className="mb-1 flex flex-col sm:flex-row sm:items-center gap-3">
               <ColorInput
                 className="h-10 w-24 border-border-card bg-background"
                 disabled={disabled}
                 id="product-manage-bg-color"
                 label="Cor do fundo"
                 onChange={handleChangeBgColor}
-                value={bgColor}
+                value={previewBgColor}
               />
               <span className="text-xs font-medium text-foreground sm:text-sm">
                 Transparente
@@ -247,7 +381,7 @@ export default function ProductManageCard({
                 checked={bgTransparent}
                 containerClassName="flex items-center"
                 disabled={disabled}
-                onChange={setBgTransparent}
+                onChange={handleToggleTransparent}
               />
             </div>
           </div>

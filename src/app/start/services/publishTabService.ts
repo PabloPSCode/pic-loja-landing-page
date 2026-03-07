@@ -67,7 +67,7 @@ export class PublishTabService {
       lineHeight: 74,
       maxLines: 2,
       color: "#111111",
-      font: "700 64px Montserrat, Sora, Arial, sans-serif",
+      font: "700 56px Montserrat, Sora, Arial, sans-serif",
     });
 
     const descriptionY = 768 + titleLines * 74 + 26;
@@ -77,10 +77,10 @@ export class PublishTabService {
       x: 64,
       y: descriptionY,
       maxWidth: 952,
-      lineHeight: 52,
-      maxLines: 4,
+      lineHeight: 60,
+      maxLines: 6,
       color: DESCRIPTION_COLOR,
-      font: "400 44px Montserrat, Arial, sans-serif",
+      font: "400 40px Montserrat, Arial, sans-serif",
     });
 
     if (product.showPrice !== false && product.price.trim()) {
@@ -91,11 +91,11 @@ export class PublishTabService {
         x: 64,
         y: priceY,
         maxWidth: 952,
-        lineHeight: 84,
+        lineHeight: 40,
         maxLines: 1,
         align: "center",
         color: "#111111",
-        font: "700 72px Montserrat, Sora, Arial, sans-serif",
+        font: "700 68px Montserrat, Sora, Arial, sans-serif",
       });
     }
 
