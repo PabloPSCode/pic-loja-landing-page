@@ -25,6 +25,7 @@ import {
   useState,
 } from "react";
 import LoginModal from "./components/LoginModal";
+import { PublishTabService } from "./services/publishTabService";
 
 const TOTAL_STEPS = 3;
 
@@ -100,8 +101,14 @@ export default function Start() {
 
     setUploadedFile(nextFile);
     setPreviewUrl(nextPreviewUrl);
+    setProductData((prev) => ({
+      ...prev,
+      imgUrl: nextPreviewUrl,
+    }));
     setActiveStep("upload");
     setIsGenerating(false);
+    setIsProductGenerated(false);
+    setIsProductSaved(false);
     event.currentTarget.value = "";
   };
 
@@ -112,8 +119,14 @@ export default function Start() {
 
     setUploadedFile(null);
     setPreviewUrl(null);
+    setProductData((prev) => ({
+      ...prev,
+      imgUrl: mockedProductData.imgUrl,
+    }));
     setActiveStep("upload");
     setIsGenerating(false);
+    setIsProductGenerated(false);
+    setIsProductSaved(false);
   };
 
   const startProductGeneration = () => {
@@ -177,22 +190,29 @@ export default function Start() {
     [isProductSaved, productData],
   );
 
-  const generateProductImage = () => {
-    //GENERATE IMAGE USING CANVAS BASED ON productData
-    console.log("Gerar imagem do produto:", productData);
-  };
+  const handleDownloadGeneratedProduct = useCallback(async () => {
+    try {
+      await PublishTabService.downloadProductImage(productData);
+    } catch (error) {
+      console.error("Erro ao salvar imagem do produto:", error);
+    }
+  }, [productData]);
 
-  const handleShare = () => {
-    console.log("Compartilhar produto:", productData);
-  };
-
-
+  const handleShareGeneratedProduct = useCallback(async () => {
+    try {
+      await PublishTabService.shareProductImage(productData);
+    } catch (error) {
+      console.error("Erro ao compartilhar imagem do produto:", error);
+    }
+  }, [productData]);
 
   return (
     <main className="min-h-[60vh] w-full bg-white/50 px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 sm:gap-6">
         {isAuthenticated && (
           <UserCard
+            actionHref="/my-products"
+            actionLabel="Meus produtos"
             userName={userData.name}
             usedCredits={userData.usedCredits}
             totalCredits={userData.totalCredits}
@@ -280,15 +300,18 @@ export default function Start() {
 
             <SimpleProductCard
               title={productData.title}
-              description={productData.description as never}
+              description={productData.description}
+              bgColor={productData.bgColor}
               imgUrl={productData.imgUrl}
               price={productData.price}
             />
-            <ShareControllerCard
-              title="Compartilhe seu produto"
-              onSave={handleSaveProduct}
-              onShare={handleShare}
-            />
+            <div className="w-full mt-4">
+              <ShareControllerCard
+                title="Compartilhe seu produto"
+                onSave={handleDownloadGeneratedProduct}
+                onShare={handleShareGeneratedProduct}
+              />
+            </div>
           </section>
         ) : null}
       </div>

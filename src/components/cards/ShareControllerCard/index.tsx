@@ -17,7 +17,7 @@ export interface ShareControllerCardProps {
   /** Título exibido no topo do card */
   title: string;
   /** Callback da ação de salvar */
-  onSave: (product: IProductData) => void;
+  onSave: () => void;
   /** Callback da ação de compartilhar */
   onShare: () => void;
   /** Texto do botão de salvar */
@@ -67,7 +67,7 @@ export default function ShareControllerCard({
               "disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:min-w-[176px]",
             )}
             disabled={saveDisabled}
-            onClick={() => onSave({ title: "", imgUrl: "", description: "", price: "", bgColor: "" })}
+            onClick={onSave}
             type="button"
           >
             <DownloadSimpleIcon size={18} weight="bold" />
