@@ -1,13 +1,16 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+export interface AuthUser {
+  name: string;
+  email: string;
+  avatarUrl?: string;
+}
+
 interface AuthState {
   isAuthenticated: boolean;
-  user: {
-    name: string;
-    email: string;
-  } | null;
-  login: (name: string, email: string) => void;
+  user: AuthUser | null;
+  login: (name: string, email: string, avatarUrl?: string) => void;
   logout: () => void;
 }
 
@@ -16,8 +19,15 @@ export const useAuthStore = create<AuthState, [["zustand/persist", unknown]]>(
     (set) => ({
       isAuthenticated: false,
       user: null,
-      login: (name, email) =>
-        set({ isAuthenticated: true, user: { name, email } }),
+      login: (name, email, avatarUrl) =>
+        set({
+          isAuthenticated: true,
+          user: {
+            name,
+            email,
+            ...(avatarUrl ? { avatarUrl } : {}),
+          },
+        }),
       logout: () => set({ isAuthenticated: false, user: null }),
     }),
     {

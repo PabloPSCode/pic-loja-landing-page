@@ -1,9 +1,11 @@
 "use client";
 
-import { MagicWandIcon, UserIcon } from "@phosphor-icons/react";
+import { useAuthStore } from "@/stores/auth-store";
+import { MagicWandIcon, SignOutIcon, UserIcon } from "@phosphor-icons/react";
 import clsx from "clsx";
+import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 
 export interface UserCardProps {
@@ -29,8 +31,12 @@ export interface UserCardProps {
   creditsTextClassName?: string;
   /** Callback da ação exibida no card */
   onAction?: () => void;
+  /** Callback executado após sair */
+  onLogout?: () => void;
   /** Desabilita a ação exibida no card */
   actionDisabled?: boolean;
+  /** Texto do botão de logout */
+  logoutLabel?: string;
   activePathName?: "products" | "start";
 }
 
@@ -50,20 +56,36 @@ export default function UserCard({
   userTextClassName,
   creditsTextClassName,
   onAction,
+  onLogout,
   actionDisabled = false,
+  logoutLabel = "Sair",
 }: UserCardProps) {
-
-  const pathName = usePathname()
-  const normalizedPathName = pathName.split("/")[1] || "start"; 
+  const pathName = usePathname();
+  const router = useRouter();
+  const normalizedPathName = pathName.split("/")[1] || "start";
+  const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
 
   const actionClassName = clsx(
     "inline-flex items-center justify-center rounded-md px-4 py-3",
     "bg-primary-500 text-sm font-semibold text-foreground transition-colors hover:bg-primary-400",
     "disabled:cursor-not-allowed disabled:opacity-60",
   );
+  const logoutButtonClassName = clsx(
+    "inline-flex items-center justify-center gap-2 rounded-md border border-foreground/10 px-4 py-3",
+    "bg-background text-sm font-semibold text-foreground transition-colors hover:bg-foreground/5",
+  );
 
-  const activePathNameLabel = normalizedPathName === "start" ? "Meus produtos" : "Gerar produto";
+  const activePathNameLabel =
+    normalizedPathName === "start" ? "Meus produtos" : "Gerar produto";
   const buttonLink = normalizedPathName === "start" ? "/my-products" : "/start";
+
+  const handleLogout = () => {
+    logout();
+    onLogout?.();
+    router.push("/start");
+  };
+
   return (
     <section
       aria-label={`Resumo de ${userName}`}
@@ -81,32 +103,55 @@ export default function UserCard({
             )}
             aria-hidden
           >
-            {userIcon ?? <UserIcon size={28} weight="fill" />}
+            {user?.avatarUrl ? (
+              <Image
+                src={user.avatarUrl}
+                alt={userName}
+                width={32}
+                height={32}
+                className="h-12 w-12 rounded-full"
+              />
+            ) : (
+              userIcon ?? <UserIcon size={28} weight="fill" />
+            )}
           </span>
 
-          <p
-            className={clsx(
-              "text-lg text-foreground sm:text-xl",
-              userTextClassName,
-            )}
-          >
-            <span className="font-medium">{greeting}, </span>
-            <strong className="font-semibold">{userName}</strong>
-          </p>
-          {buttonLink && !actionDisabled ? (
-              <Link className={actionClassName} href={buttonLink}>
-                {activePathNameLabel}
-              </Link>
-            ) : (
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+            <p
+              className={clsx(
+                "text-lg text-foreground sm:text-xl",
+                userTextClassName,
+              )}
+            >
+              <span className="font-medium">{greeting}, </span>
+              <strong className="font-semibold">{userName}</strong>
+            </p>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {buttonLink && !actionDisabled ? (
+                <Link className={actionClassName} href={buttonLink}>
+                  {activePathNameLabel}
+                </Link>
+              ) : (
+                <button
+                  className={actionClassName}
+                  disabled={actionDisabled}
+                  onClick={onAction}
+                  type="button"
+                >
+                  {activePathNameLabel}
+                </button>
+              )}
               <button
-                className={actionClassName}
-                disabled={actionDisabled}
-                onClick={onAction}
+                className={logoutButtonClassName}
+                onClick={handleLogout}
                 type="button"
               >
-                {activePathNameLabel}
+                <SignOutIcon size={16} weight="bold" />
+                {logoutLabel}
               </button>
-            )}
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center gap-3 sm:gap-4">

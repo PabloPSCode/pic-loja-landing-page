@@ -9,7 +9,7 @@ import SimpleProductCard from "@/components/cards/SimpleProductCard";
 import UserCard from "@/components/cards/UserCard";
 import StepIndicator from "@/components/miscellaneous/StepIndicator";
 import { mockedProductData, mockedUserData } from "@/mocks";
-import { useAuthStore } from "@/stores/auth-store";
+import { type AuthUser, useAuthStore } from "@/stores/auth-store";
 import {
   CameraIcon,
   CircleNotchIcon,
@@ -39,7 +39,6 @@ interface IUserData {
 }
 
 export default function Start() {
-
   const authenticatedUser = useAuthStore((state) => state.user);
 
   const [activeStep, setActiveStep] = useState<ActiveStep>("upload");
@@ -47,13 +46,7 @@ export default function Start() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isProductGenerated, setIsProductGenerated] = useState(false);
-  // const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [userData] = useState<IUserData>({
-    name: authenticatedUser?.name || "Usuário",
-    usedCredits: mockedUserData.usedCredits,
-    totalCredits: mockedUserData.totalCredits,
-  });
   const [isProductSaved, setIsProductSaved] = useState(false);
   const generationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
@@ -63,7 +56,12 @@ export default function Start() {
     showPrice: Boolean(mockedProductData.price),
   });
 
-  const logUserIn = useAuthStore(state => state.login)
+  const logUserIn = useAuthStore((state) => state.login);
+  const userData: IUserData = {
+    name: authenticatedUser?.name || "Usuário",
+    usedCredits: mockedUserData.usedCredits,
+    totalCredits: mockedUserData.totalCredits,
+  };
 
   useEffect(() => {
     return () => {
@@ -161,6 +159,7 @@ export default function Start() {
 
     if (!authenticatedUser) {
       setShowAuthModal(true);
+      return;
     }
 
     startProductGeneration();
@@ -179,8 +178,8 @@ export default function Start() {
     }
   };
 
-  const handleAuthenticate = () => {
-    logUserIn("User Name", "user@example.com");
+  const handleAuthenticate = ({ name, email, avatarUrl }: AuthUser) => {
+    logUserIn(name, email, avatarUrl);
     setShowAuthModal(false);
     startProductGeneration();
   };
@@ -196,7 +195,7 @@ export default function Start() {
       setActiveStep("result");
       console.log("Saved product:", updatedProduct);
     },
-    [isProductSaved, productData],
+    [],
   );
 
   const handleDownloadGeneratedProduct = useCallback(async () => {

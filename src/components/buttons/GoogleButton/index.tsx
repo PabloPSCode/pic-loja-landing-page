@@ -27,11 +27,14 @@ export default function GoogleSignInButton({
   variant = "red",
   iconVariant = "scale",
   iconColor = "#ffffff",
+  disabled,
   ...props
 }: GoogleSignInButtonProps) {
+  const isDisabled = loading || disabled;
+
   return (
     <button
-      className={`flex items-center justify-center w-full px-3 py-2 sm:px-4  rounded-md font-semibold ${
+      className={`flex items-center justify-center w-full px-3 py-2 sm:px-4 rounded-md font-semibold transition-opacity disabled:cursor-not-allowed disabled:opacity-60 ${
         variant === "primary"
           ? "bg-primary-500 text-white hover:bg-primary-600"
           : variant === "gray"
@@ -42,7 +45,7 @@ export default function GoogleSignInButton({
           ? "bg-blue-500 text-white hover:bg-blue-600"
           : ""
       }`}
-      disabled={loading}
+      disabled={isDisabled}
       {...props}
     >
       {loading ? (
