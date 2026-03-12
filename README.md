@@ -28,6 +28,31 @@ NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-oauth-client-id.apps.googleusercontent.
 
 Use a Google OAuth client allowed for JavaScript/browser origins that include your local and deployed domains.
 
+## OpenAI image analysis endpoint
+
+The project exposes `POST /api/chats` for object detection and description from an uploaded image.
+
+Set this server-side variable in `.env.local`:
+
+```bash
+OPENAI_API_KEY=your-openai-api-key
+```
+
+Send the image as `multipart/form-data` using the field name `image`.
+
+## Remove background proxy endpoint
+
+The project also exposes `POST /api/remove-bg`, which forwards the uploaded image to the remove-bg worker running locally on port `4000`.
+
+Optional `.env.local` override:
+
+```bash
+REMOVE_BG_PROCESS_URL=http://127.0.0.1:4000/process
+REMOVE_BG_VERIFY_TOKEN=your-remove-bg-token
+```
+
+Send the image as `multipart/form-data` using the field name `image`.
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More

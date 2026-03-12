@@ -8,7 +8,7 @@ import ShareControllerCard, {
 import SimpleProductCard from "@/components/cards/SimpleProductCard";
 import UserCard from "@/components/cards/UserCard";
 import StepIndicator from "@/components/miscellaneous/StepIndicator";
-import { mockedProductData, mockedUserData } from "@/mocks";
+import { mockedUserData } from "@/mocks";
 import { type AuthUser, useAuthStore } from "@/stores/auth-store";
 import {
   CameraIcon,
@@ -32,6 +32,12 @@ const TOTAL_STEPS = 3;
 
 type ActiveStep = "upload" | "generate" | "result";
 
+interface ImageObjectAnalysisResponse {
+  title: string | null;
+  description: string | null;
+  containsObject: boolean;
+}
+
 interface IUserData {
   name: string;
   usedCredits: number;
@@ -46,14 +52,19 @@ export default function Start() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isProductGenerated, setIsProductGenerated] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isProductSaved, setIsProductSaved] = useState(false);
   const generationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
   const [productData, setProductData] = useState<IProductData>({
-    ...mockedProductData,
-    showPrice: Boolean(mockedProductData.price),
+    title: "",
+    description: "",
+    price: 0,
+    imgUrl: "",
+    bgColor: "",
+    showPrice: true,
   });
 
   const logUserIn = useAuthStore((state) => state.login);
@@ -113,6 +124,7 @@ export default function Start() {
       ...prev,
       imgUrl: nextPreviewUrl,
     }));
+    setGenerationError(null);
     setActiveStep("upload");
     setIsGenerating(false);
     setIsProductGenerated(false);
@@ -129,32 +141,147 @@ export default function Start() {
     setPreviewUrl(null);
     setProductData((prev) => ({
       ...prev,
-      imgUrl: mockedProductData.imgUrl,
     }));
+    setGenerationError(null);
     setActiveStep("upload");
     setIsGenerating(false);
     setIsProductGenerated(false);
     setIsProductSaved(false);
   };
 
-  const startProductGeneration = () => {
+  const removeBg = async (file: File) => {
+    const formData = new FormData();
+    formData.append("image", file);
+
+    const response = await fetch("/api/remove-bg", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error("Nao foi possivel remover o fundo da imagem.");
+    }
+
+    const blob = await response.blob();
+    const imageUrl = URL.createObjectURL(blob);
+    setProductData((prev) => ({
+      ...prev,
+      imgUrl: imageUrl,
+    }));
+  };
+
+  const requestProductCopyFromUploadedImage = async (
+    file: File,
+  ): Promise<ImageObjectAnalysisResponse> => {
+    const formData = new FormData();
+
+    formData.append("image", file);
+
+    const response = await fetch("/api/chats", {
+      method: "POST",
+      body: formData,
+    });
+
+    const payload = (await response.json().catch(() => null)) as
+      | (ImageObjectAnalysisResponse & { error?: string })
+      | { error?: string }
+      | null;
+
+    if (!response.ok) {
+      throw new Error(
+        payload && "error" in payload && typeof payload.error === "string"
+          ? payload.error
+          : "Nao foi possivel analisar a imagem enviada.",
+      );
+    }
+
+    if (
+      !payload ||
+      !("containsObject" in payload) ||
+      typeof payload.containsObject !== "boolean"
+    ) {
+      throw new Error("A API retornou um formato de resposta invalido.");
+    }
+
+    return {
+      title:
+        "title" in payload &&
+        (typeof payload.title === "string" || payload.title === null)
+          ? payload.title
+          : null,
+      description:
+        "description" in payload &&
+        (typeof payload.description === "string" ||
+          payload.description === null)
+          ? payload.description
+          : null,
+      containsObject: payload.containsObject,
+    };
+  };
+
+  const startProductGeneration = async () => {
     if (!uploadedFile) return;
 
+    setGenerationError(null);
     setActiveStep("generate");
     setIsGenerating(true);
+    setIsProductGenerated(false);
 
     if (generationTimeoutRef.current) {
       clearTimeout(generationTimeoutRef.current);
     }
 
-    generationTimeoutRef.current = setTimeout(() => {
+    try {
+      const [analysis] = await Promise.all([
+        removeBg(uploadedFile).then(() =>
+          requestProductCopyFromUploadedImage(uploadedFile),
+        ),
+        new Promise((resolve) => {
+          generationTimeoutRef.current = setTimeout(() => {
+            generationTimeoutRef.current = null;
+            resolve(true);
+          }, 3000);
+        }),
+      ]);
+
+      if (
+        !analysis.containsObject ||
+        !analysis.title ||
+        !analysis.description
+      ) {
+        setGenerationError(
+          "Nao encontramos um unico objeto claro na imagem. Envie outra foto para gerar o produto.",
+        );
+        setIsGenerating(false);
+        setActiveStep("upload");
+        return;
+      }
+
+      setProductData((prev) => ({
+        ...prev,
+        title: analysis.title!,
+        description: analysis.description!,
+      }));
       setIsGenerating(false);
       setIsProductGenerated(true);
-      generationTimeoutRef.current = null;
-    }, 3000);
+    } catch (error) {
+      if (generationTimeoutRef.current) {
+        clearTimeout(generationTimeoutRef.current);
+        generationTimeoutRef.current = null;
+      }
+
+      setGenerationError(
+        error instanceof Error
+          ? error.message
+          : "Nao foi possivel gerar o produto a partir da imagem enviada.",
+      );
+      setIsGenerating(false);
+      setIsProductGenerated(false);
+      setActiveStep("upload");
+    }
   };
 
-  const handleGenerateProduct = () => {
+  const handleGenerateProduct = async () => {
     if (!uploadedFile) return;
 
     if (!authenticatedUser) {
@@ -162,7 +289,7 @@ export default function Start() {
       return;
     }
 
-    startProductGeneration();
+    await startProductGeneration();
   };
 
   const mapActiveStepToIndex = (step: ActiveStep) => {
@@ -188,15 +315,12 @@ export default function Start() {
     setShowAuthModal((prev) => !prev);
   };
 
-  const handleSaveProduct = useCallback(
-    (updatedProduct: IProductData) => {
-      setProductData(updatedProduct);
-      setIsProductSaved(true);
-      setActiveStep("result");
-      console.log("Saved product:", updatedProduct);
-    },
-    [],
-  );
+  const handleSaveProduct = useCallback((updatedProduct: IProductData) => {
+    setProductData(updatedProduct);
+    setIsProductSaved(true);
+    setActiveStep("result");
+    console.log("Saved product:", updatedProduct);
+  }, []);
 
   const handleDownloadGeneratedProduct = useCallback(async () => {
     try {
@@ -230,6 +354,11 @@ export default function Start() {
           stepTitle={stepConfig.title}
           totalSteps={TOTAL_STEPS}
         />
+        {generationError && (
+          <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {generationError}
+          </div>
+        )}
 
         {activeStep === "upload" ? (
           <NoImageCard

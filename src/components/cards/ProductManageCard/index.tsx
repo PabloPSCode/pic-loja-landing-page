@@ -17,7 +17,7 @@ export interface ProductManageCardProduct {
   /** Descrição inicial do produto */
   description?: string;
   /** Preço inicial do produto */
-  price?: string | number;
+  price?: number;
   /** Define se o preço deve aparecer ativo inicialmente */
   showPrice?: boolean;
   /** Cor de fundo do preview */
@@ -32,7 +32,7 @@ export interface ProductManageCardSavePayload {
   /** Descrição atual do formulário */
   description: string;
   /** Preço atual do formulário */
-  price: string;
+  price: number;
   /** Define se o preço está ativo */
   showPrice: boolean;
   /** Cor de fundo selecionada */
@@ -54,24 +54,24 @@ export interface ProductManageCardProps {
   disabled?: boolean;
 }
 
-const DEFAULT_BACKGROUND_COLOR = "#c2c2c2";
+const DEFAULT_BACKGROUND_COLOR = "#F7F7F7";
 const DEFAULT_TRANSPARENT_BACKGROUND_COLOR = "#FFFFFF";
 const MAX_DESCRIPTION_LENGTH = 250;
 
 interface ProductManageCardFormState {
   description: string;
-  price: string;
+  priceInput: string;
   showPrice: boolean;
   bgTransparent: boolean;
   selectedBgColor: string;
 }
 
-function hasInitialPrice(price?: string | number) {
+function hasInitialPrice(price?: number) {
   if (typeof price === "number") {
     return true;
   }
 
-  return Boolean(price?.trim());
+  return false;
 }
 
 function resolveInitialShowPrice(product: ProductManageCardProduct) {
@@ -82,12 +82,27 @@ function resolveInitialShowPrice(product: ProductManageCardProduct) {
   return hasInitialPrice(product.price);
 }
 
-function normalizeInitialPrice(price?: string | number) {
+function normalizeInitialPrice(price?: number) {
   if (typeof price === "number") {
     return price.toFixed(2).replace(".", ",");
   }
 
-  return price ?? "";
+  return "";
+}
+
+function parsePriceInput(value: string) {
+  const normalizedValue = value
+    .replace(/[^\d,-]/g, "")
+    .replace(/\./g, "")
+    .replace(",", ".");
+
+  if (!normalizedValue) {
+    return 0;
+  }
+
+  const parsedValue = Number(normalizedValue);
+
+  return Number.isFinite(parsedValue) ? parsedValue : 0;
 }
 
 function resolveInitialSolidBgColor(bgColor?: string) {
@@ -103,7 +118,7 @@ function resolveFormState(
 ): ProductManageCardFormState {
   return {
     description: product.description ?? "",
-    price: normalizeInitialPrice(product.price),
+    priceInput: normalizeInitialPrice(product.price),
     showPrice: resolveInitialShowPrice(product),
     bgTransparent: product.bgColor === DEFAULT_TRANSPARENT_BACKGROUND_COLOR,
     selectedBgColor: resolveInitialSolidBgColor(product.bgColor),
@@ -113,7 +128,7 @@ function resolveFormState(
 function buildPayload(
   product: ProductManageCardProduct,
   description: string,
-  price: string,
+  price: number,
   showPrice: boolean,
   bgColor: string,
 ): ProductManageCardSavePayload {
@@ -133,7 +148,7 @@ function buildPayloadFromProduct(product: ProductManageCardProduct) {
   return buildPayload(
     product,
     formState.description,
-    formState.price,
+    parsePriceInput(formState.priceInput),
     formState.showPrice,
     formState.bgTransparent
       ? DEFAULT_TRANSPARENT_BACKGROUND_COLOR
@@ -170,7 +185,7 @@ export default function ProductManageCard({
   const initialFormState = resolveFormState(product);
   const lastEmittedPayloadRef = useRef<ProductManageCardSavePayload | null>(null);
   const [description, setDescription] = useState(initialFormState.description);
-  const [price, setPrice] = useState(initialFormState.price);
+  const [priceInput, setPriceInput] = useState(initialFormState.priceInput);
   const [showPrice, setShowPrice] = useState(initialFormState.showPrice);
   const [bgTransparent, setBgTransparent] = useState(
     initialFormState.bgTransparent,
@@ -182,6 +197,8 @@ export default function ProductManageCard({
   const previewBgColor = bgTransparent
     ? DEFAULT_TRANSPARENT_BACKGROUND_COLOR
     : selectedBgColor;
+  const parsedPrice = parsePriceInput(priceInput);
+  const saveDisabled = disabled || (showPrice && parsedPrice <= 0);
 
   useEffect(() => {
     const nextPayload = buildPayloadFromProduct(product);
@@ -196,7 +213,9 @@ export default function ProductManageCard({
     setDescription((current) =>
       current === nextFormState.description ? current : nextFormState.description,
     );
-    setPrice((current) => (current === nextFormState.price ? current : nextFormState.price));
+    setPriceInput((current) =>
+      current === nextFormState.priceInput ? current : nextFormState.priceInput,
+    );
     setShowPrice((current) =>
       current === nextFormState.showPrice ? current : nextFormState.showPrice,
     );
@@ -221,13 +240,13 @@ export default function ProductManageCard({
 
   const emitChange = ({
     nextDescription = description,
-    nextPrice = price,
+    nextPriceInput = priceInput,
     nextShowPrice = showPrice,
     nextSelectedBgColor = selectedBgColor,
     nextBgTransparent = bgTransparent,
   }: {
     nextDescription?: string;
-    nextPrice?: string;
+    nextPriceInput?: string;
     nextShowPrice?: boolean;
     nextSelectedBgColor?: string;
     nextBgTransparent?: boolean;
@@ -243,7 +262,7 @@ export default function ProductManageCard({
     const nextPayload = buildPayload(
       product,
       nextDescription,
-      nextPrice,
+      parsePriceInput(nextPriceInput),
       nextShowPrice,
       nextBgColor,
     );
@@ -261,9 +280,9 @@ export default function ProductManageCard({
   };
 
   const handlePriceChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const nextPrice = event.target.value;
-    setPrice(nextPrice);
-    emitChange({ nextPrice });
+    const nextPriceInput = event.target.value;
+    setPriceInput(nextPriceInput);
+    emitChange({ nextPriceInput });
   };
 
   const handleToggleShowPrice = (checked: boolean) => {
@@ -287,7 +306,19 @@ export default function ProductManageCard({
   };
 
   const handleSave = () => {
-    onSave(buildPayload(product, description, price, showPrice, previewBgColor));
+    if (saveDisabled) {
+      return;
+    }
+
+    onSave(
+      buildPayload(
+        product,
+        description,
+        parsedPrice,
+        showPrice,
+        previewBgColor,
+      ),
+    );
   };
 
   return (
@@ -357,11 +388,16 @@ export default function ProductManageCard({
                     ? "Ative o preço para editar este campo."
                     : undefined
                 }
+                errorMessage={
+                  showPrice && parsedPrice < 0
+                    ? "O preço não pode ser negativo."
+                    : undefined
+                }
                 id="product-manage-price"
                 label="Preço"
                 onChange={handlePriceChange}
                 placeholder="R$ 99,90"
-                value={price}
+                value={priceInput}
               />
             </div>
 
@@ -390,7 +426,7 @@ export default function ProductManageCard({
         <div className="flex w-full h-full flex-col justify-center p-4">
           <Button
             className="w-full justify-center rounded-md py-3 text-sm font-semibold sm:text-base"
-            disabled={disabled}
+            disabled={saveDisabled}
             label={saveButtonLabel}
             onClick={handleSave}
             type="button"

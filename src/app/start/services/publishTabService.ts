@@ -1,6 +1,7 @@
 "use client";
 
 import type { IProductData } from "@/components/cards/ShareControllerCard";
+import { formatBRL } from "@/utils/format";
 import {
   canvasToBlob,
   createCanvas,
@@ -80,14 +81,14 @@ export class PublishTabService {
       lineHeight: 60,
       maxLines: 6,
       color: DESCRIPTION_COLOR,
-      font: "400 40px Montserrat, Arial, sans-serif",
+      font: "400 32px Montserrat, Arial, sans-serif",
     });
 
-    if (product.showPrice !== false && product.price.trim()) {
+    if (product.showPrice !== false) {
       const priceY = descriptionY + descriptionLines * 52 + 70;
 
       drawMultilineText(ctx, {
-        text: product.price,
+        text: formatBRL(product.price),
         x: 64,
         y: priceY,
         maxWidth: 952,

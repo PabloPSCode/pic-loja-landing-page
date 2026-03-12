@@ -11,7 +11,7 @@ export interface SimpleProductCardProps {
   /** URL da imagem do produto */
   imgUrl: string;
   /** Preço do produto */
-  price: string | number;
+  price: number;
   /** Descrição do produto */
   description: string;
   /** Cor de fundo do preview da imagem */
@@ -38,30 +38,6 @@ export interface SimpleProductCardProps {
 
 const DEFAULT_BACKGROUND_COLOR = "#c2c2c2";
 
-function formatProductPrice(price: string | number) {
-  if (typeof price === "number") {
-    return formatBRL(price);
-  }
-
-  const normalizedPrice = price.trim();
-
-  if (!normalizedPrice) {
-    return "Sob consulta";
-  }
-
-  if (normalizedPrice.includes("R$")) {
-    return normalizedPrice;
-  }
-
-  const numericValue = Number(normalizedPrice.replace(/\./g, "").replace(",", "."));
-
-  if (!Number.isNaN(numericValue)) {
-    return formatBRL(numericValue);
-  }
-
-  return price;
-}
-
 /**
  * Versão simplificada de um card de produto para exibir resultado gerado.
  * Mantém apenas imagem, título e preço com suporte a dark mode e responsividade.
@@ -82,7 +58,7 @@ export default function SimpleProductCard({
   saveDisabled = false,
   shareDisabled = false,
 }: SimpleProductCardProps) {
-  const formattedPrice = formatProductPrice(price);
+  const formattedPrice = formatBRL(price);
   const hasActions = Boolean(onSave || onShare);
 
   return (

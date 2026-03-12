@@ -7,7 +7,7 @@ export interface IProductData {
   title: string;
   imgUrl: string;
   description: string;
-  price: string;
+  price: number;
   showPrice?: boolean;
   bgColor: string;
 }

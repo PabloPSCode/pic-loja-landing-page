@@ -998,11 +998,11 @@ export const mockedUserData = {
 };
 
 export const mockedProductData = {
-  price: "R$ 79,90",
+  price: 79.9,
   title: "Tênis esportivo",
   imgUrl:
     "https://images.unsplash.com/photo-1503602642458-232111445657?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MH",
-  bgColor: "#c2c2c2",
+  bgColor: "",
   description:
     "Tênis de alta qualidade, ideal para corridas e atividades físicas. Confortável e durável, com design moderno.",
 };
@@ -1012,7 +1012,7 @@ export const mockGeneratedProducts = [
     id: "generated-1",
     title: "Saia Jeans Mid Azul Feminina",
     imgUrl: "/imgs/picloja-showcase-real.jpg",
-    price: "R$ 49,90",
+    price: 49.9,
     bgColor: "#cfcfcf",
     description:
       "Peça casual com caimento confortável e visual versátil para compor looks do dia a dia.",
@@ -1021,7 +1021,7 @@ export const mockGeneratedProducts = [
     id: "generated-2",
     title: "Saia Jeans Mid Azul Feminina",
     imgUrl: "/imgs/picloja-showcase-real.jpg",
-    price: "R$ 49,90",
+    price: 49.9,
     bgColor: "#cfcfcf",
     description:
       "Modelo pensado para destacar o produto com imagem limpa, leitura direta e melhor apresentação.",
@@ -1030,7 +1030,7 @@ export const mockGeneratedProducts = [
     id: "generated-3",
     title: "Saia Jeans Mid Azul Feminina",
     imgUrl: "/imgs/picloja-showcase-real.jpg",
-    price: "R$ 49,90",
+    price: 49.9,
     bgColor: "#d98acb",
     description:
       "Versão com fundo mais vibrante para reforçar contraste visual e chamar atenção na listagem.",
@@ -1039,7 +1039,7 @@ export const mockGeneratedProducts = [
     id: "generated-4",
     title: "Saia Jeans Mid Azul Feminina",
     imgUrl: "/imgs/picloja-showcase-real.jpg",
-    price: "R$ 49,90",
+    price: 49.9,
     bgColor: "#cfcfcf",
     description:
       "Produto pronto para salvar ou compartilhar com uma apresentação objetiva e focada em conversão.",
