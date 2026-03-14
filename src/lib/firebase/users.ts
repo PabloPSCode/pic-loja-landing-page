@@ -15,6 +15,12 @@ interface CreateUserProfileInput extends Omit<ICreateUserDTO, "password"> {
   credits?: number;
 }
 
+interface SyncAuthenticatedUserProfileInput {
+  name: string;
+  email: string;
+  avatarUrl?: string;
+}
+
 function buildUserPayload(
   data: Partial<CreateUserProfileInput>,
 ): Partial<FirestoreUserDocument> {
@@ -35,11 +41,11 @@ export async function createUserProfile(
   const payload: FirestoreUserDocument = {
     name: data.name,
     email: data.email,
-    avatarUrl: data.avatarUrl,
     credits: data.credits ?? 0,
     createdAt: now,
     updatedAt: now,
     deletedAt: null,
+    ...(data.avatarUrl ? { avatarUrl: data.avatarUrl } : {}),
   };
 
   await setDoc(userRef, payload);
@@ -91,4 +97,31 @@ export async function updateUserProfile(
   });
 
   return getUserDocumentById(userId);
+}
+
+export async function syncAuthenticatedUserProfile(
+  userId: string,
+  data: SyncAuthenticatedUserProfileInput,
+): Promise<IUserDocumentDTO> {
+  const existingUser = await getUserDocumentById(userId);
+
+  if (!existingUser) {
+    return createUserProfile(userId, {
+      name: data.name,
+      email: data.email,
+      avatarUrl: data.avatarUrl,
+    });
+  }
+
+  const updatedUser = await updateUserProfile(userId, {
+    name: data.name,
+    email: data.email,
+    avatarUrl: data.avatarUrl,
+  });
+
+  if (!updatedUser) {
+    throw new Error("Nao foi possivel sincronizar o perfil do usuario no Firestore.");
+  }
+
+  return updatedUser;
 }

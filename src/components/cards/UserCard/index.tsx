@@ -1,5 +1,6 @@
 "use client";
 
+import { signOutAuthenticatedUser } from "@/lib/firebase/auth";
 import { useAuthStore } from "@/stores/auth-store";
 import { MagicWandIcon, SignOutIcon, UserIcon } from "@phosphor-icons/react";
 import clsx from "clsx";
@@ -80,7 +81,13 @@ export default function UserCard({
     normalizedPathName === "start" ? "Meus produtos" : "Gerar produto";
   const buttonLink = normalizedPathName === "start" ? "/my-products" : "/start";
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await signOutAuthenticatedUser();
+    } catch (error) {
+      console.error("Erro ao encerrar a sessao Firebase:", error);
+    }
+
     logout();
     onLogout?.();
     router.push("/start");

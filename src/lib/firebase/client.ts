@@ -20,6 +20,6 @@ if (missingFirebaseEnvVars.length > 0) {
   );
 }
 
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
+export const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
 
 export const db = getFirestore(app);

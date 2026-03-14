@@ -333,6 +333,25 @@ export default function Start() {
     }
   }, [authenticatedUser?.avatarUrl, productData]);
 
+  const handleLogout = () => {
+    setActiveStep("upload");
+    setUploadedFile(null);
+    setPreviewUrl(null);
+    setIsGenerating(false);
+    setIsProductGenerated(false);
+    setIsProductSaved(false);
+    setProductData({
+      title: "",
+      description: "",
+      price: 0,
+      imgUrl: "",
+      bgColor: "",
+      showPrice: false,
+      showLogo: true,
+    });
+    useAuthStore.getState().logout();
+  };
+
   const handleShareGeneratedProduct = useCallback(async () => {
     try {
       await PublishTabService.shareProductImage(productData, {
@@ -351,6 +370,7 @@ export default function Start() {
             userName={userData.name}
             usedCredits={userData.usedCredits}
             totalCredits={userData.totalCredits}
+            onLogout={handleLogout}
           />
         )}
         <StepIndicator
