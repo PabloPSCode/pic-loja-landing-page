@@ -11,13 +11,37 @@ import {
   drawRoundedRect,
   getCanvasContext,
   loadImage,
+  wrapTextLines,
 } from "@/lib/canva";
 
 const CANVAS_WIDTH = 1080;
-const CANVAS_HEIGHT = 1350;
 const PAGE_BACKGROUND = "#ffffff";
 const DESCRIPTION_COLOR = "#5b5b5b";
 const IMAGE_BACKGROUND = "#d6d6d6";
+const IMAGE_FRAME_X = 64;
+const IMAGE_FRAME_Y = 64;
+const IMAGE_FRAME_WIDTH = 952;
+const IMAGE_FRAME_HEIGHT = 640;
+const CORNER_PADDING = 32;
+const PRICE_BADGE_HEIGHT = 96;
+const PRICE_BADGE_MIN_WIDTH = 260;
+const AVATAR_SIZE = 96;
+const TITLE_X = 64;
+const TITLE_Y = 768;
+const TITLE_MAX_WIDTH = 952;
+const TITLE_LINE_HEIGHT = 74;
+const TITLE_MAX_LINES = 2;
+const TITLE_FONT = "700 56px Montserrat, Sora, Arial, sans-serif";
+const DESCRIPTION_TOP_GAP = 26;
+const DESCRIPTION_X = 64;
+const DESCRIPTION_MAX_WIDTH = 952;
+const DESCRIPTION_LINE_HEIGHT = 60;
+const DESCRIPTION_FONT = "400 32px Montserrat, Arial, sans-serif";
+const CONTENT_BOTTOM_PADDING = 96;
+
+interface ProductRenderOptions {
+  avatarUrl?: string;
+}
 
 function sanitizeFilename(title: string) {
   return title
@@ -34,88 +58,209 @@ async function ensureFontsLoaded() {
   }
 }
 
+function resolveCanvasHeight(product: IProductData) {
+  const measureCanvas = createCanvas(1, 1);
+  const measureCtx = getCanvasContext(measureCanvas);
+
+  measureCtx.font = TITLE_FONT;
+  const titleLines = wrapTextLines(
+    measureCtx,
+    product.title,
+    TITLE_MAX_WIDTH,
+    TITLE_MAX_LINES,
+  );
+
+  measureCtx.font = DESCRIPTION_FONT;
+  const descriptionLines = wrapTextLines(
+    measureCtx,
+    product.description,
+    DESCRIPTION_MAX_WIDTH,
+  );
+
+  const titleLineCount = Math.max(1, titleLines.length);
+  const descriptionLineCount = Math.max(1, descriptionLines.length);
+  const descriptionY =
+    TITLE_Y + titleLineCount * TITLE_LINE_HEIGHT + DESCRIPTION_TOP_GAP;
+
+  return (
+    descriptionY +
+    descriptionLineCount * DESCRIPTION_LINE_HEIGHT +
+    CONTENT_BOTTOM_PADDING
+  );
+}
+
+function drawPriceBadge(ctx: CanvasRenderingContext2D, formattedPrice: string) {
+  ctx.save();
+  ctx.font = "700 40px Montserrat, Sora, Arial, sans-serif";
+
+  const textWidth = ctx.measureText(formattedPrice).width;
+  const badgeWidth = Math.max(PRICE_BADGE_MIN_WIDTH, textWidth + 64);
+  const badgeX = IMAGE_FRAME_X + CORNER_PADDING;
+  const badgeY = IMAGE_FRAME_Y + CORNER_PADDING;
+
+  ctx.shadowColor = "rgba(15, 23, 42, 0.12)";
+  ctx.shadowBlur = 24;
+  ctx.shadowOffsetY = 10;
+
+  drawRoundedRect(ctx, {
+    x: badgeX,
+    y: badgeY,
+    width: badgeWidth,
+    height: PRICE_BADGE_HEIGHT,
+    radius: 28,
+    fillStyle: "#ffffff",
+  });
+
+  ctx.shadowColor = "transparent";
+  ctx.fillStyle = "#111111";
+  ctx.textBaseline = "middle";
+  ctx.fillText(
+    formattedPrice,
+    badgeX + 32,
+    badgeY + PRICE_BADGE_HEIGHT / 2 + 2,
+  );
+  ctx.restore();
+}
+
+async function drawAvatarLogo(
+  ctx: CanvasRenderingContext2D,
+  avatarUrl?: string,
+) {
+  if (!avatarUrl) {
+    return;
+  }
+
+  let avatarImage: HTMLImageElement;
+
+  try {
+    avatarImage = await loadImage(avatarUrl);
+  } catch {
+    return;
+  }
+
+  const avatarX = IMAGE_FRAME_X + IMAGE_FRAME_WIDTH - AVATAR_SIZE - CORNER_PADDING;
+  const avatarY = IMAGE_FRAME_Y + CORNER_PADDING;
+  const avatarRadius = AVATAR_SIZE / 2;
+
+  ctx.save();
+  ctx.shadowColor = "rgba(15, 23, 42, 0.14)";
+  ctx.shadowBlur = 24;
+  ctx.shadowOffsetY = 10;
+
+  ctx.beginPath();
+  ctx.arc(
+    avatarX + avatarRadius,
+    avatarY + avatarRadius,
+    avatarRadius,
+    0,
+    Math.PI * 2,
+  );
+  ctx.closePath();
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
+
+  ctx.shadowColor = "transparent";
+  ctx.beginPath();
+  ctx.arc(
+    avatarX + avatarRadius,
+    avatarY + avatarRadius,
+    avatarRadius - 6,
+    0,
+    Math.PI * 2,
+  );
+  ctx.closePath();
+  ctx.clip();
+
+  ctx.drawImage(avatarImage, avatarX + 6, avatarY + 6, AVATAR_SIZE - 12, AVATAR_SIZE - 12);
+  ctx.restore();
+}
+
 export class PublishTabService {
-  static async generateProductCanvas(product: IProductData) {
+  static async generateProductCanvas(
+    product: IProductData,
+    options?: ProductRenderOptions,
+  ) {
     if (!product.imgUrl) {
       throw new Error("Imagem do produto não encontrada");
     }
 
     await ensureFontsLoaded();
 
-    const canvas = createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
+    const canvas = createCanvas(CANVAS_WIDTH, resolveCanvasHeight(product));
     const ctx = getCanvasContext(canvas);
     const image = await loadImage(product.imgUrl);
 
     ctx.fillStyle = PAGE_BACKGROUND;
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     drawRoundedRect(ctx, {
-      x: 64,
-      y: 64,
-      width: 952,
-      height: 640,
+      x: IMAGE_FRAME_X,
+      y: IMAGE_FRAME_Y,
+      width: IMAGE_FRAME_WIDTH,
+      height: IMAGE_FRAME_HEIGHT,
       radius: 28,
       fillStyle: product.bgColor || IMAGE_BACKGROUND,
     });
 
     drawImageContain(ctx, image, 120, 120, 840, 530);
 
+    if (product.showPrice !== false) {
+      drawPriceBadge(ctx, formatBRL(product.price));
+    }
+
+    if (product.showLogo !== false) {
+      await drawAvatarLogo(ctx, options?.avatarUrl);
+    }
+
     const titleLines = drawMultilineText(ctx, {
       text: product.title,
-      x: 64,
-      y: 768,
-      maxWidth: 952,
-      lineHeight: 74,
-      maxLines: 2,
+      x: TITLE_X,
+      y: TITLE_Y,
+      maxWidth: TITLE_MAX_WIDTH,
+      lineHeight: TITLE_LINE_HEIGHT,
+      maxLines: TITLE_MAX_LINES,
       color: "#111111",
-      font: "700 56px Montserrat, Sora, Arial, sans-serif",
+      font: TITLE_FONT,
     });
 
-    const descriptionY = 768 + titleLines * 74 + 26;
+    const descriptionY =
+      TITLE_Y + titleLines * TITLE_LINE_HEIGHT + DESCRIPTION_TOP_GAP;
 
-    const descriptionLines = drawMultilineText(ctx, {
+    drawMultilineText(ctx, {
       text: product.description,
-      x: 64,
+      x: DESCRIPTION_X,
       y: descriptionY,
-      maxWidth: 952,
-      lineHeight: 60,
-      maxLines: 6,
+      maxWidth: DESCRIPTION_MAX_WIDTH,
+      lineHeight: DESCRIPTION_LINE_HEIGHT,
       color: DESCRIPTION_COLOR,
-      font: "400 32px Montserrat, Arial, sans-serif",
+      font: DESCRIPTION_FONT,
     });
-
-    if (product.showPrice !== false) {
-      const priceY = descriptionY + descriptionLines * 52 + 70;
-
-      drawMultilineText(ctx, {
-        text: formatBRL(product.price),
-        x: 64,
-        y: priceY,
-        maxWidth: 952,
-        lineHeight: 40,
-        maxLines: 1,
-        align: "center",
-        color: "#111111",
-        font: "700 68px Montserrat, Sora, Arial, sans-serif",
-      });
-    }
 
     return canvas;
   }
 
-  static async generateProductBlob(product: IProductData) {
-    const canvas = await PublishTabService.generateProductCanvas(product);
+  static async generateProductBlob(
+    product: IProductData,
+    options?: ProductRenderOptions,
+  ) {
+    const canvas = await PublishTabService.generateProductCanvas(product, options);
     return canvasToBlob(canvas);
   }
 
-  static async downloadProductImage(product: IProductData) {
-    const blob = await PublishTabService.generateProductBlob(product);
+  static async downloadProductImage(
+    product: IProductData,
+    options?: ProductRenderOptions,
+  ) {
+    const blob = await PublishTabService.generateProductBlob(product, options);
     const filename = `${sanitizeFilename(product.title || "produto") || "produto"}.png`;
     downloadBlob(blob, filename);
   }
 
-  static async shareProductImage(product: IProductData) {
-    const blob = await PublishTabService.generateProductBlob(product);
+  static async shareProductImage(
+    product: IProductData,
+    options?: ProductRenderOptions,
+  ) {
+    const blob = await PublishTabService.generateProductBlob(product, options);
     const filename = `${sanitizeFilename(product.title || "produto") || "produto"}.png`;
     const file = new File([blob], filename, { type: "image/png" });
 

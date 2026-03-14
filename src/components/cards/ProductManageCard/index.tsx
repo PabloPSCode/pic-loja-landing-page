@@ -20,6 +20,8 @@ export interface ProductManageCardProduct {
   price?: number;
   /** Define se o preço deve aparecer ativo inicialmente */
   showPrice?: boolean;
+  /** Define se a logo deve aparecer ativa inicialmente */
+  showLogo?: boolean;
   /** Cor de fundo do preview */
   bgColor?: string;
 }
@@ -35,6 +37,8 @@ export interface ProductManageCardSavePayload {
   price: number;
   /** Define se o preço está ativo */
   showPrice: boolean;
+  /** Define se a logo está ativa */
+  showLogo: boolean;
   /** Cor de fundo selecionada */
   bgColor: string;
 }
@@ -52,6 +56,8 @@ export interface ProductManageCardProps {
   className?: string;
   /** Desabilita a ação de salvar */
   disabled?: boolean;
+  /** Informa se há uma logo disponível para exibir */
+  logoAvailable?: boolean;
 }
 
 const DEFAULT_BACKGROUND_COLOR = "#F7F7F7";
@@ -62,6 +68,7 @@ interface ProductManageCardFormState {
   description: string;
   priceInput: string;
   showPrice: boolean;
+  showLogo: boolean;
   bgTransparent: boolean;
   selectedBgColor: string;
 }
@@ -88,6 +95,14 @@ function normalizeInitialPrice(price?: number) {
   }
 
   return "";
+}
+
+function resolveInitialShowLogo(product: ProductManageCardProduct) {
+  if (typeof product.showLogo === "boolean") {
+    return product.showLogo;
+  }
+
+  return true;
 }
 
 function parsePriceInput(value: string) {
@@ -120,6 +135,7 @@ function resolveFormState(
     description: product.description ?? "",
     priceInput: normalizeInitialPrice(product.price),
     showPrice: resolveInitialShowPrice(product),
+    showLogo: resolveInitialShowLogo(product),
     bgTransparent: product.bgColor === DEFAULT_TRANSPARENT_BACKGROUND_COLOR,
     selectedBgColor: resolveInitialSolidBgColor(product.bgColor),
   };
@@ -130,6 +146,7 @@ function buildPayload(
   description: string,
   price: number,
   showPrice: boolean,
+  showLogo: boolean,
   bgColor: string,
 ): ProductManageCardSavePayload {
   return {
@@ -138,6 +155,7 @@ function buildPayload(
     description,
     price,
     showPrice,
+    showLogo,
     bgColor,
   };
 }
@@ -150,6 +168,7 @@ function buildPayloadFromProduct(product: ProductManageCardProduct) {
     formState.description,
     parsePriceInput(formState.priceInput),
     formState.showPrice,
+    formState.showLogo,
     formState.bgTransparent
       ? DEFAULT_TRANSPARENT_BACKGROUND_COLOR
       : formState.selectedBgColor,
@@ -170,6 +189,7 @@ function isSamePayload(
     left.description === right.description &&
     left.price === right.price &&
     left.showPrice === right.showPrice &&
+    left.showLogo === right.showLogo &&
     left.bgColor === right.bgColor
   );
 }
@@ -181,12 +201,16 @@ export default function ProductManageCard({
   saveButtonLabel = "Salvar produto",
   className,
   disabled = false,
+  logoAvailable = true,
 }: ProductManageCardProps) {
   const initialFormState = resolveFormState(product);
-  const lastEmittedPayloadRef = useRef<ProductManageCardSavePayload | null>(null);
+  const lastEmittedPayloadRef = useRef<ProductManageCardSavePayload | null>(
+    null,
+  );
   const [description, setDescription] = useState(initialFormState.description);
   const [priceInput, setPriceInput] = useState(initialFormState.priceInput);
   const [showPrice, setShowPrice] = useState(initialFormState.showPrice);
+  const [showLogo, setShowLogo] = useState(initialFormState.showLogo);
   const [bgTransparent, setBgTransparent] = useState(
     initialFormState.bgTransparent,
   );
@@ -211,13 +235,18 @@ export default function ProductManageCard({
     const nextFormState = resolveFormState(product);
 
     setDescription((current) =>
-      current === nextFormState.description ? current : nextFormState.description,
+      current === nextFormState.description
+        ? current
+        : nextFormState.description,
     );
     setPriceInput((current) =>
       current === nextFormState.priceInput ? current : nextFormState.priceInput,
     );
     setShowPrice((current) =>
       current === nextFormState.showPrice ? current : nextFormState.showPrice,
+    );
+    setShowLogo((current) =>
+      current === nextFormState.showLogo ? current : nextFormState.showLogo,
     );
     setBgTransparent((current) =>
       current === nextFormState.bgTransparent
@@ -235,6 +264,7 @@ export default function ProductManageCard({
     product.imgUrl,
     product.price,
     product.showPrice,
+    product.showLogo,
     product.title,
   ]);
 
@@ -242,12 +272,14 @@ export default function ProductManageCard({
     nextDescription = description,
     nextPriceInput = priceInput,
     nextShowPrice = showPrice,
+    nextShowLogo = showLogo,
     nextSelectedBgColor = selectedBgColor,
     nextBgTransparent = bgTransparent,
   }: {
     nextDescription?: string;
     nextPriceInput?: string;
     nextShowPrice?: boolean;
+    nextShowLogo?: boolean;
     nextSelectedBgColor?: string;
     nextBgTransparent?: boolean;
   }) => {
@@ -264,6 +296,7 @@ export default function ProductManageCard({
       nextDescription,
       parsePriceInput(nextPriceInput),
       nextShowPrice,
+      nextShowLogo,
       nextBgColor,
     );
 
@@ -288,6 +321,11 @@ export default function ProductManageCard({
   const handleToggleShowPrice = (checked: boolean) => {
     setShowPrice(checked);
     emitChange({ nextShowPrice: checked });
+  };
+
+  const handleToggleShowLogo = (checked: boolean) => {
+    setShowLogo(checked);
+    emitChange({ nextShowLogo: checked });
   };
 
   const handleChangeBgColor = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -316,6 +354,7 @@ export default function ProductManageCard({
         description,
         parsedPrice,
         showPrice,
+        showLogo,
         previewBgColor,
       ),
     );
@@ -364,7 +403,7 @@ export default function ProductManageCard({
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_220px]">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_120px]">
             <div className="w-full">
               <div className="mb-1 flex items-center gap-3">
                 <span className="text-xs font-medium text-foreground sm:text-sm">
@@ -401,29 +440,51 @@ export default function ProductManageCard({
               />
             </div>
 
-            <div className="mb-1 flex flex-col sm:flex-row sm:items-center gap-3">
-              <ColorInput
-                className="h-10 w-24 border-border-card bg-background"
-                disabled={disabled}
-                id="product-manage-bg-color"
-                label="Cor do fundo"
-                onChange={handleChangeBgColor}
-                value={previewBgColor}
-              />
-              <span className="text-xs font-medium text-foreground sm:text-sm">
-                Transparente
-              </span>
-              <Switcher
-                checked={bgTransparent}
-                containerClassName="flex items-center"
-                disabled={disabled}
-                onChange={handleToggleTransparent}
-              />
+            <div className="flex gap-4">
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-medium text-foreground sm:text-sm">
+                    Logo
+                  </span>
+                  <Switcher
+                    checked={showLogo}
+                    containerClassName="flex items-center"
+                    disabled={disabled || !logoAvailable}
+                    onChange={handleToggleShowLogo}
+                  />
+                </div>
+                {!logoAvailable && (
+                  <span className="text-xs text-foreground/70">
+                    Faça login com uma conta que tenha avatar para usar a logo.
+                  </span>
+                )}
+              </div>
+
+              <div className="mb-1 flex gap-3">
+                <div className="flex">
+                  <span className="text-xs font-medium text-foreground sm:text-sm">
+                    Transparente
+                  </span>
+                  <Switcher
+                    checked={bgTransparent}
+                    disabled={disabled}
+                    onChange={handleToggleTransparent}
+                  />
+                </div>
+                <ColorInput
+                  className="h-10 w-24 border-border-card bg-background"
+                  disabled={disabled}
+                  id="product-manage-bg-color"
+                  label="Cor do fundo"
+                  onChange={handleChangeBgColor}
+                  value={previewBgColor}
+                />
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="flex w-full h-full flex-col justify-center p-4">
+        <div className="flex w-full flex-col justify-center p-4 mt-2">
           <Button
             className="w-full justify-center rounded-md py-3 text-sm font-semibold sm:text-base"
             disabled={saveDisabled}

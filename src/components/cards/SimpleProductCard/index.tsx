@@ -1,8 +1,8 @@
 "use client";
 
 import { formatBRL } from "@/utils/format";
-import clsx from "clsx";
 import { DownloadSimpleIcon, ShareNetworkIcon } from "@phosphor-icons/react";
+import clsx from "clsx";
 import Image from "next/image";
 
 export interface SimpleProductCardProps {
@@ -94,14 +94,16 @@ export default function SimpleProductCard({
           >
             {title}
           </h2>
-          <p
-            className={clsx(
-              "text-lg font-bold text-foreground sm:text-xl",
-              priceClassName,
-            )}
-          >
-            {formattedPrice}
-          </p>
+          {price > 0 && (
+            <p
+              className={clsx(
+                "text-lg font-bold text-foreground sm:text-xl",
+                priceClassName,
+              )}
+            >
+              {formattedPrice}
+            </p>
+          )}
           <p className="text-xs text-foreground/75 sm:text-base">
             {description}
           </p>

@@ -9,6 +9,7 @@ export interface IProductData {
   description: string;
   price: number;
   showPrice?: boolean;
+  showLogo?: boolean;
   bgColor: string;
 }
 

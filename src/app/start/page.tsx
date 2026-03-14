@@ -64,7 +64,8 @@ export default function Start() {
     price: 0,
     imgUrl: "",
     bgColor: "",
-    showPrice: true,
+    showPrice: false,
+    showLogo: true,
   });
 
   const logUserIn = useAuthStore((state) => state.login);
@@ -324,19 +325,23 @@ export default function Start() {
 
   const handleDownloadGeneratedProduct = useCallback(async () => {
     try {
-      await PublishTabService.downloadProductImage(productData);
+      await PublishTabService.downloadProductImage(productData, {
+        avatarUrl: authenticatedUser?.avatarUrl,
+      });
     } catch (error) {
       console.error("Erro ao salvar imagem do produto:", error);
     }
-  }, [productData]);
+  }, [authenticatedUser?.avatarUrl, productData]);
 
   const handleShareGeneratedProduct = useCallback(async () => {
     try {
-      await PublishTabService.shareProductImage(productData);
+      await PublishTabService.shareProductImage(productData, {
+        avatarUrl: authenticatedUser?.avatarUrl,
+      });
     } catch (error) {
       console.error("Erro ao compartilhar imagem do produto:", error);
     }
-  }, [productData]);
+  }, [authenticatedUser?.avatarUrl, productData]);
 
   return (
     <main className="min-h-[60vh] w-full bg-white/50 px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
@@ -422,6 +427,7 @@ export default function Start() {
             </h3>
 
             <ProductManageCard
+              logoAvailable={Boolean(authenticatedUser?.avatarUrl)}
               product={productData}
               onChange={setProductData}
               onSave={handleSaveProduct}
