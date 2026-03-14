@@ -82,6 +82,7 @@ export default function LoginModal({
       }
 
       await onAuthenticate?.({
+        id: credentialResult.user.uid,
         name: resolvedName,
         email: resolvedEmail,
         avatarUrl: resolvedAvatarUrl,

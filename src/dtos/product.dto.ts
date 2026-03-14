@@ -5,6 +5,7 @@ export interface IProductDocumentDTO {
   price: number;
   imageUrl: string;
   userId: string;
+  bgColor: string;
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date;
@@ -18,6 +19,7 @@ export interface ICreateProductDTO {
   price: number;
   imageUrl: string;
   userId: string;
+  bgColor: string;
 }
 
 export interface IUpdateProductDTO {
@@ -25,4 +27,5 @@ export interface IUpdateProductDTO {
   description?: string;
   price?: number;
   imageUrl?: string;
+  bgColor?: string;
 }

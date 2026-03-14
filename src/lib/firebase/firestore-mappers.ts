@@ -18,6 +18,7 @@ export interface FirestoreProductDocument {
   price: number;
   imageUrl: string;
   userId: string;
+  bgColor: string;
   createdAt: Date | Timestamp;
   updatedAt: Date | Timestamp;
   deletedAt?: Date | Timestamp | null;
@@ -66,6 +67,7 @@ export function mapProductDocument(
     price: data.price,
     imageUrl: data.imageUrl,
     userId: data.userId,
+    bgColor: data.bgColor,
     createdAt: toDate(data.createdAt) ?? new Date(),
     updatedAt: toDate(data.updatedAt) ?? new Date(),
     deletedAt: toDate(data.deletedAt),

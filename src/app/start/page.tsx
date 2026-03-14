@@ -27,6 +27,8 @@ import {
 } from "react";
 import LoginModal from "./components/LoginModal";
 import { PublishTabService } from "./services/publishTabService";
+import { createProduct } from "@/lib/firebase/products";
+import { uploadGeneratedProductImage } from "@/lib/firebase/storage";
 
 const TOTAL_STEPS = 3;
 
@@ -55,6 +57,7 @@ export default function Start() {
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isProductSaved, setIsProductSaved] = useState(false);
+  const [isSavingProduct, setIsSavingProduct] = useState(false);
   const generationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -62,10 +65,11 @@ export default function Start() {
     title: "",
     description: "",
     price: 0,
-    imgUrl: "",
     bgColor: "",
     showPrice: false,
     showLogo: true,
+    imageUrl: "",
+    userId: "",
   });
 
   const logUserIn = useAuthStore((state) => state.login);
@@ -121,10 +125,16 @@ export default function Start() {
 
     setUploadedFile(nextFile);
     setPreviewUrl(nextPreviewUrl);
-    setProductData((prev) => ({
-      ...prev,
-      imgUrl: nextPreviewUrl,
-    }));
+    setProductData({
+      title: "",
+      description: "",
+      price: 0,
+      imageUrl: nextPreviewUrl,
+      userId: authenticatedUser?.id ?? "",
+      bgColor: "",
+      showPrice: false,
+      showLogo: true,
+    });
     setGenerationError(null);
     setActiveStep("upload");
     setIsGenerating(false);
@@ -140,9 +150,16 @@ export default function Start() {
 
     setUploadedFile(null);
     setPreviewUrl(null);
-    setProductData((prev) => ({
-      ...prev,
-    }));
+    setProductData({
+      title: "",
+      description: "",
+      price: 0,
+      imageUrl: "",
+      userId: authenticatedUser?.id ?? "",
+      bgColor: "",
+      showPrice: false,
+      showLogo: true,
+    });
     setGenerationError(null);
     setActiveStep("upload");
     setIsGenerating(false);
@@ -167,7 +184,7 @@ export default function Start() {
     const imageUrl = URL.createObjectURL(blob);
     setProductData((prev) => ({
       ...prev,
-      imgUrl: imageUrl,
+      imageUrl,
     }));
   };
 
@@ -306,8 +323,8 @@ export default function Start() {
     }
   };
 
-  const handleAuthenticate = ({ name, email, avatarUrl }: AuthUser) => {
-    logUserIn(name, email, avatarUrl);
+  const handleAuthenticate = ({ id, name, email, avatarUrl }: AuthUser) => {
+    logUserIn(id, name, email, avatarUrl);
     setShowAuthModal(false);
     startProductGeneration();
   };
@@ -316,12 +333,62 @@ export default function Start() {
     setShowAuthModal((prev) => !prev);
   };
 
-  const handleSaveProduct = useCallback((updatedProduct: IProductData) => {
-    setProductData(updatedProduct);
-    setIsProductSaved(true);
-    setActiveStep("result");
-    console.log("Saved product:", updatedProduct);
-  }, []);
+  const handleSaveProduct = useCallback(
+    async (product: IProductData) => {
+      if (!authenticatedUser?.id) {
+        setGenerationError("Faça login novamente antes de salvar o produto.");
+        setShowAuthModal(true);
+        return;
+      }
+
+      if (!product.imageUrl) {
+        setGenerationError("A imagem gerada do produto não foi encontrada.");
+        return;
+      }
+
+      const payload: IProductData = {
+        ...product,
+        userId: authenticatedUser.id,
+      };
+
+      setIsSavingProduct(true);
+      setGenerationError(null);
+
+      try {
+        const persistedImageUrl = await uploadGeneratedProductImage(
+          payload.imageUrl,
+          payload.userId,
+          payload.title,
+        );
+        const persistedProduct: IProductData = {
+          ...payload,
+          imageUrl: persistedImageUrl,
+        };
+
+        await createProduct({
+          title: persistedProduct.title,
+          description: persistedProduct.description,
+          price: persistedProduct.price,
+          imageUrl: persistedProduct.imageUrl,
+          userId: persistedProduct.userId,
+          bgColor: persistedProduct.bgColor,
+        });
+
+        setProductData(persistedProduct);
+        setIsProductSaved(true);
+        setActiveStep("result");
+      } catch (error) {
+        setGenerationError(
+          error instanceof Error
+            ? error.message
+            : "Nao foi possivel salvar o produto no Firestore.",
+        );
+      } finally {
+        setIsSavingProduct(false);
+      }
+    },
+    [authenticatedUser?.id],
+  );
 
   const handleDownloadGeneratedProduct = useCallback(async () => {
     try {
@@ -344,10 +411,11 @@ export default function Start() {
       title: "",
       description: "",
       price: 0,
-      imgUrl: "",
+      imageUrl: "",
       bgColor: "",
       showPrice: false,
       showLogo: true,
+      userId: "",
     });
     useAuthStore.getState().logout();
   };
@@ -447,10 +515,12 @@ export default function Start() {
             </h3>
 
             <ProductManageCard
+              disabled={isSavingProduct}
               logoAvailable={Boolean(authenticatedUser?.avatarUrl)}
               product={productData}
               onChange={setProductData}
               onSave={handleSaveProduct}
+              saveButtonLabel={isSavingProduct ? "Salvando..." : "Salvar produto"}
             />
           </section>
         ) : activeStep === "result" && isProductSaved ? (
@@ -463,7 +533,7 @@ export default function Start() {
               title={productData.title}
               description={productData.description}
               bgColor={productData.bgColor}
-              imgUrl={productData.imgUrl}
+              imgUrl={productData.imageUrl}
               price={productData.price}
             />
             <div className="w-full mt-4">

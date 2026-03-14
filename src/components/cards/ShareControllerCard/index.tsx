@@ -2,17 +2,12 @@
 
 import clsx from "clsx";
 import { DownloadSimpleIcon, ShareNetworkIcon } from "@phosphor-icons/react";
+import { ICreateProductDTO } from "@/dtos/product.dto";
 
-export interface IProductData {
-  title: string;
-  imgUrl: string;
-  description: string;
-  price: number;
+export interface IProductData extends ICreateProductDTO {
   showPrice?: boolean;
   showLogo?: boolean;
-  bgColor: string;
 }
-
 
 export interface ShareControllerCardProps {
   /** Título exibido no topo do card */

@@ -1,6 +1,7 @@
 "use client";
 
 import Button from "@/components/buttons/Button";
+import type { IProductData } from "@/components/cards/ShareControllerCard";
 import ColorInput from "@/components/inputs/ColorInput";
 import CurrencyInput from "@/components/inputs/CurrencyInput";
 import TextAreaInput from "@/components/inputs/TextAreaInput";
@@ -9,39 +10,9 @@ import clsx from "clsx";
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
-export interface ProductManageCardProduct {
-  /** Título do produto */
-  title: string;
-  /** URL da imagem do produto */
-  imgUrl: string;
-  /** Descrição inicial do produto */
-  description?: string;
-  /** Preço inicial do produto */
-  price?: number;
-  /** Define se o preço deve aparecer ativo inicialmente */
-  showPrice?: boolean;
-  /** Define se a logo deve aparecer ativa inicialmente */
-  showLogo?: boolean;
-  /** Cor de fundo do preview */
-  bgColor?: string;
-}
+export type ProductManageCardProduct = IProductData;
 
-export interface ProductManageCardSavePayload {
-  /** Título do produto */
-  title: string;
-  /** URL da imagem do produto */
-  imgUrl: string;
-  /** Descrição atual do formulário */
-  description: string;
-  /** Preço atual do formulário */
-  price: number;
-  /** Define se o preço está ativo */
-  showPrice: boolean;
-  /** Define se a logo está ativa */
-  showLogo: boolean;
-  /** Cor de fundo selecionada */
-  bgColor: string;
-}
+export type ProductManageCardSavePayload = IProductData;
 
 export interface ProductManageCardProps {
   /** Dados iniciais do produto */
@@ -151,7 +122,8 @@ function buildPayload(
 ): ProductManageCardSavePayload {
   return {
     title: product.title,
-    imgUrl: product.imgUrl,
+    imageUrl: product.imageUrl,
+    userId: product.userId,
     description,
     price,
     showPrice,
@@ -185,7 +157,7 @@ function isSamePayload(
 
   return (
     left.title === right.title &&
-    left.imgUrl === right.imgUrl &&
+    left.imageUrl === right.imageUrl &&
     left.description === right.description &&
     left.price === right.price &&
     left.showPrice === right.showPrice &&
@@ -261,7 +233,7 @@ export default function ProductManageCard({
   }, [
     product.bgColor,
     product.description,
-    product.imgUrl,
+    product.imageUrl,
     product.price,
     product.showPrice,
     product.showLogo,
@@ -370,15 +342,17 @@ export default function ProductManageCard({
           className="flex min-h-[168px] items-center justify-center overflow-hidden rounded-lg p-4 border border-border-card"
           style={{ backgroundColor: previewBgColor }}
         >
-          <div className="relative h-full min-h-[136px] w-full">
-            <Image
-              alt={product.title}
-              className="object-contain"
-              fill
-              sizes="(max-width: 1024px) 100vw, 232px"
-              src={product.imgUrl}
-            />
-          </div>
+          {product.imageUrl && (
+            <div className="relative h-full min-h-[136px] w-full">
+              <Image
+                alt={product.title}
+                className="object-contain"
+                fill
+                sizes="(max-width: 1024px) 100vw, 232px"
+                src={product.imageUrl}
+              />
+            </div>
+          )}
         </div>
 
         <div className="flex w-full flex-col gap-4">

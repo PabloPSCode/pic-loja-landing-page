@@ -1,12 +1,19 @@
 "use client";
 
+import { IProductData } from "@/components/cards/ShareControllerCard";
 import SimpleProductCard from "@/components/cards/SimpleProductCard";
 import UserCard from "@/components/cards/UserCard";
-import { mockedUserData, mockGeneratedProducts } from "@/mocks";
+import { getProductsByUserId } from "@/lib/firebase/products";
+import { PublishTabService } from "@/app/start/services/publishTabService";
+import { mockedUserData } from "@/mocks";
 import { useAuthStore } from "@/stores/auth-store";
+import { useCallback, useEffect, useState } from "react";
 
 export default function MyProducts() {
   const user = useAuthStore((state) => state.user);
+  const [products, setProducts] = useState<IProductData[]>([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [productsError, setProductsError] = useState<string | null>(null);
 
   if (!user) {
     return (
@@ -20,13 +27,81 @@ export default function MyProducts() {
     );
   }
 
-  const handleSave = (productId: string) => {
-    console.log("Salvar imagem do produto:", productId);
-  };
+  useEffect(() => {
+    let isCancelled = false;
 
-  const handleShare = (productId: string) => {
-    console.log("Compartilhar imagem do produto:", productId);
-  };
+    const loadProducts = async () => {
+      setIsLoadingProducts(true);
+      setProductsError(null);
+
+      try {
+        const fetchedProducts = await getProductsByUserId(user.id);
+
+        if (isCancelled) {
+          return;
+        }
+
+        setProducts(
+          fetchedProducts.map((product) => ({
+            title: product.title,
+            description: product.description,
+            price: product.price,
+            imageUrl: product.imageUrl,
+            userId: product.userId,
+            bgColor: product.bgColor,
+            showPrice: true,
+            showLogo: true,
+          })),
+        );
+      } catch (error) {
+        if (isCancelled) {
+          return;
+        }
+
+        setProductsError(
+          error instanceof Error
+            ? error.message
+            : "Nao foi possivel carregar os produtos do usuario.",
+        );
+      } finally {
+        if (!isCancelled) {
+          setIsLoadingProducts(false);
+        }
+      }
+    };
+
+    void loadProducts();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [user.id]);
+
+  const handleSave = useCallback(
+    async (product: IProductData) => {
+      try {
+        await PublishTabService.downloadProductImage(product, {
+          avatarUrl: user.avatarUrl,
+        });
+      } catch (error) {
+        console.error("Erro ao salvar imagem do produto:", error);
+      }
+    },
+    [user.avatarUrl],
+  );
+
+  const handleShare = useCallback(
+    async (product: IProductData) => {
+      try {
+        await PublishTabService.shareProductImage(product, {
+          avatarUrl: user.avatarUrl,
+        });
+      } catch (error) {
+        console.error("Erro ao compartilhar imagem do produto:", error);
+      }
+    },
+    [user.avatarUrl],
+  );
 
   return (
     <main className="min-h-[60vh] w-full bg-white/50 px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
@@ -47,20 +122,36 @@ export default function MyProducts() {
             </p>
           </div>
 
-          <div className="flex w-full flex-col gap-4">
-            {mockGeneratedProducts.map((product) => (
+          {productsError && (
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {productsError}
+            </div>
+          )}
+
+          {isLoadingProducts ? (
+            <div className="py-10 text-center text-sm text-foreground/70 sm:text-base">
+              Carregando produtos...
+            </div>
+          ) : products.length === 0 ? (
+            <div className="py-10 text-center text-sm text-foreground/70 sm:text-base">
+              Nenhum produto salvo foi encontrado para este usuario.
+            </div>
+          ) : (
+            <div className="flex w-full flex-col gap-4">
+              {products.map((product) => (
               <SimpleProductCard
                 bgColor={product.bgColor}
                 description={product.description}
-                imgUrl={product.imgUrl}
-                key={product.id}
-                onSave={() => handleSave(product.id)}
-                onShare={() => handleShare(product.id)}
+                imgUrl={product.imageUrl}
+                key={`${product.userId}-${product.imageUrl}`}
+                onSave={() => void handleSave(product)}
+                onShare={() => void handleShare(product)}
                 price={product.price}
                 title={product.title}
               />
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </main>

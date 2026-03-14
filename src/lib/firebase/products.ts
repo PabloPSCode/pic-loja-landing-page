@@ -30,6 +30,7 @@ function buildProductPayload(
     ...(data.description !== undefined ? { description: data.description } : {}),
     ...(data.price !== undefined ? { price: data.price } : {}),
     ...(data.imageUrl !== undefined ? { imageUrl: data.imageUrl } : {}),
+    ...(data.bgColor !== undefined ? { bgColor: data.bgColor } : {}),
     ...("userId" in data && data.userId !== undefined ? { userId: data.userId } : {}),
   };
 }
@@ -45,6 +46,7 @@ export async function createProduct(
     price: data.price,
     imageUrl: data.imageUrl,
     userId: data.userId,
+    bgColor: data.bgColor,
     createdAt: now,
     updatedAt: now,
     deletedAt: null,

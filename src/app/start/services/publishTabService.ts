@@ -180,7 +180,7 @@ export class PublishTabService {
     product: IProductData,
     options?: ProductRenderOptions,
   ) {
-    if (!product.imgUrl) {
+    if (!product.imageUrl) {
       throw new Error("Imagem do produto não encontrada");
     }
 
@@ -188,7 +188,7 @@ export class PublishTabService {
 
     const canvas = createCanvas(CANVAS_WIDTH, resolveCanvasHeight(product));
     const ctx = getCanvasContext(canvas);
-    const image = await loadImage(product.imgUrl);
+    const image = await loadImage(product.imageUrl);
 
     ctx.fillStyle = PAGE_BACKGROUND;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
