@@ -78,14 +78,24 @@ export function drawRoundedRect(
 }
 
 export async function loadImage(src: string) {
+  let resolvedSrc = src;
+
+  if (
+    /^https?:\/\//.test(src) &&
+    typeof window !== "undefined" &&
+    !src.startsWith(window.location.origin)
+  ) {
+    resolvedSrc = `/api/image-proxy?url=${encodeURIComponent(src)}`;
+  }
+
   const image = new Image();
 
-  if (/^https?:\/\//.test(src)) {
+  if (/^https?:\/\//.test(resolvedSrc)) {
     image.crossOrigin = "anonymous";
   }
 
   image.decoding = "async";
-  image.src = src;
+  image.src = resolvedSrc;
 
   await image.decode();
   return image;
