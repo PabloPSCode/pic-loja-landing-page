@@ -32,6 +32,8 @@ export interface ProductManageCardProps {
   logoAvailable?: boolean;
   /** Exibe o controle de logo no editor */
   showLogoControl?: boolean;
+  /** Define uma variação de layout para contextos menores, como modais */
+  layout?: "default" | "stacked";
 }
 
 const DEFAULT_BACKGROUND_COLOR = "#F7F7F7";
@@ -183,6 +185,7 @@ export default function ProductManageCard({
   disabled = false,
   logoAvailable = true,
   showLogoControl = true,
+  layout = "default",
 }: ProductManageCardProps) {
   const initialFormState = resolveFormState(product);
   const lastEmittedPayloadRef = useRef<ProductManageCardSavePayload | null>(
@@ -205,6 +208,7 @@ export default function ProductManageCard({
     : selectedBgColor;
   const parsedPrice = parsePriceInput(priceInput);
   const normalizedTitle = title.trim();
+  const isStackedLayout = layout === "stacked";
   const saveDisabled =
     disabled || !normalizedTitle || (showPrice && parsedPrice <= 0);
 
@@ -362,9 +366,19 @@ export default function ProductManageCard({
       aria-label={`Gerenciamento do produto ${normalizedTitle || product.title}`}
       className={clsx("w-full rounded-xl  bg-bg-card p-4  sm:p-6", className)}
     >
-      <div className="grid w-full gap-5 lg:grid-cols-[232px_minmax(0,1fr)_248px] lg:items-start">
+      <div
+        className={clsx(
+          "w-full gap-5",
+          isStackedLayout
+            ? "flex flex-col"
+            : "grid lg:grid-cols-[232px_minmax(0,1fr)_248px] lg:items-start",
+        )}
+      >
         <div
-          className="flex min-h-[168px] items-center justify-center overflow-hidden rounded-lg p-4 border border-border-card"
+          className={clsx(
+            "flex min-h-[168px] items-center justify-center overflow-hidden rounded-lg border border-border-card p-4",
+            isStackedLayout && "mx-auto w-full max-w-[280px]",
+          )}
           style={{ backgroundColor: previewBgColor }}
         >
           {product.imageUrl && (
@@ -416,7 +430,14 @@ export default function ProductManageCard({
             </div>
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_120px]">
+          <div
+            className={clsx(
+              "gap-4",
+              isStackedLayout
+                ? "flex flex-col"
+                : "grid lg:grid-cols-[minmax(0,1fr)_120px]",
+            )}
+          >
             <div className="w-full">
               <div className="mb-1 flex items-center gap-3">
                 <span className="text-xs font-medium text-foreground sm:text-sm">
@@ -453,7 +474,12 @@ export default function ProductManageCard({
               />
             </div>
 
-            <div className="flex gap-4">
+            <div
+              className={clsx(
+                "gap-4",
+                isStackedLayout ? "flex flex-col" : "flex",
+              )}
+            >
               {showLogoControl && (
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center gap-3">
@@ -475,8 +501,13 @@ export default function ProductManageCard({
                 </div>
               )}
 
-              <div className="mb-1 flex gap-3">
-                <div className="flex">
+              <div
+                className={clsx(
+                  "mb-1 gap-3",
+                  isStackedLayout ? "flex flex-col" : "flex",
+                )}
+              >
+                <div className="flex items-center gap-3">
                   <span className="text-xs font-medium text-foreground sm:text-sm">
                     Transparente
                   </span>
@@ -499,7 +530,12 @@ export default function ProductManageCard({
           </div>
         </div>
 
-        <div className="flex w-full flex-col justify-center p-4 mt-2">
+        <div
+          className={clsx(
+            "w-full",
+            isStackedLayout ? "pt-2" : "mt-2 flex flex-col justify-center p-4",
+          )}
+        >
           <Button
             className="w-full justify-center rounded-md py-3 text-sm font-semibold sm:text-base"
             disabled={saveDisabled}

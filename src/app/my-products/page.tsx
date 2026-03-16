@@ -273,15 +273,16 @@ export default function MyProducts() {
 
       <GenericModal
         title="Editar produto"
-        description="Atualize apenas titulo, descricao, preco e cor de fundo."
+        description="Atualize dados do seu produto."
         open={Boolean(editingProduct && editingDraft)}
         onClose={handleCloseEditModal}
         size="xl"
       >
         {editingDraft && (
           <ProductManageCard
-            className="!p-0"
+            className="p-3 sm:min-w-[50vw] lg:min-w-[40vw]"
             disabled={isUpdatingProduct}
+            layout="stacked"
             logoAvailable={Boolean(user.avatarUrl)}
             onChange={setEditingDraft}
             onSave={(payload) => void handleUpdateProduct(payload)}
