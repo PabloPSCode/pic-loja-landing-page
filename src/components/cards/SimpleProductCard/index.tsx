@@ -1,5 +1,6 @@
 "use client";
 
+import IconButton from "@/components/buttons/IconButton";
 import { formatBRL } from "@/utils/format";
 import { DownloadSimpleIcon, ShareNetworkIcon } from "@phosphor-icons/react";
 import clsx from "clsx";
@@ -34,6 +35,10 @@ export interface SimpleProductCardProps {
   saveDisabled?: boolean;
   /** Desabilita o botão de compartilhar */
   shareDisabled?: boolean;
+  /** Callback para deletar o produto */
+  onDelete?: () => void;
+  /** Callback para editar o produto */
+  onEdit?: () => void;
 }
 
 const DEFAULT_BACKGROUND_COLOR = "#c2c2c2";
@@ -57,6 +62,8 @@ export default function SimpleProductCard({
   shareLabel = "Compartilhar imagem",
   saveDisabled = false,
   shareDisabled = false,
+  onDelete,
+  onEdit,
 }: SimpleProductCardProps) {
   const formattedPrice = formatBRL(price);
   const hasActions = Boolean(onSave || onShare);
@@ -108,6 +115,12 @@ export default function SimpleProductCard({
             {description}
           </p>
         </div>
+        {onEdit && onDelete && (
+          <div className="flex items-center gap-4">
+            <IconButton iconName="trash" onClick={onDelete} className="bg-red-500 p-1 text-white rounded-md" />
+            <IconButton iconName="pen" onClick={onEdit} className="bg-amber-500 p-1 text-white rounded-md"/>
+          </div>
+        )}
 
         {hasActions && (
           <div className="flex w-full flex-col gap-3 sm:w-[188px] sm:shrink-0">

@@ -69,7 +69,7 @@ export default function Start() {
     showPrice: false,
     showLogo: true,
     imageUrl: "",
-    userId: "",
+    userId: authenticatedUser?.id ?? "",
   });
 
   const logUserIn = useAuthStore((state) => state.login);
@@ -520,7 +520,9 @@ export default function Start() {
               product={productData}
               onChange={setProductData}
               onSave={handleSaveProduct}
-              saveButtonLabel={isSavingProduct ? "Salvando..." : "Salvar produto"}
+              saveButtonLabel={
+                isSavingProduct ? "Salvando..." : "Salvar produto"
+              }
             />
           </section>
         ) : activeStep === "result" && isProductSaved ? (

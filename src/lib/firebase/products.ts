@@ -5,6 +5,7 @@ import type {
 } from "@/dtos/product.dto";
 import {
   collection,
+  deleteDoc,
   doc,
   getDoc,
   getDocs,
@@ -19,19 +20,18 @@ import {
   type FirestoreProductDocument,
   mapProductDocument,
 } from "./firestore-mappers";
+import { deleteGeneratedProductImage } from "./storage";
 
 const PRODUCTS_COLLECTION = "products";
 
-function buildProductPayload(
-  data: ICreateProductDTO | IUpdateProductDTO,
-): Partial<FirestoreProductDocument> {
+function buildProductUpdatePayload(
+  data: IUpdateProductDTO,
+): Partial<Pick<FirestoreProductDocument, "title" | "description" | "price" | "bgColor">> {
   return {
     ...(data.title !== undefined ? { title: data.title } : {}),
     ...(data.description !== undefined ? { description: data.description } : {}),
     ...(data.price !== undefined ? { price: data.price } : {}),
-    ...(data.imageUrl !== undefined ? { imageUrl: data.imageUrl } : {}),
     ...(data.bgColor !== undefined ? { bgColor: data.bgColor } : {}),
-    ...("userId" in data && data.userId !== undefined ? { userId: data.userId } : {}),
   };
 }
 
@@ -49,7 +49,6 @@ export async function createProduct(
     bgColor: data.bgColor,
     createdAt: now,
     updatedAt: now,
-    deletedAt: null,
   };
 
   await setDoc(productRef, payload);
@@ -88,7 +87,6 @@ export async function getProductsByUserId(
         productDocument.data() as FirestoreProductDocument,
       ),
     )
-    .filter((product) => !product.deletedAt)
     .sort((left, right) => right.createdAt.getTime() - left.createdAt.getTime());
 }
 
@@ -97,7 +95,7 @@ export async function updateProduct(
   data: IUpdateProductDTO,
 ): Promise<IProductDocumentDTO | null> {
   const productRef = doc(db, PRODUCTS_COLLECTION, productId);
-  const payload = buildProductPayload(data);
+  const payload = buildProductUpdatePayload(data);
 
   await updateDoc(productRef, {
     ...payload,
@@ -105,4 +103,16 @@ export async function updateProduct(
   });
 
   return getProductById(productId);
+}
+
+export async function deleteProduct(productId: string): Promise<void> {
+  const productRef = doc(db, PRODUCTS_COLLECTION, productId);
+  const existingProduct = await getProductById(productId);
+
+  if (!existingProduct) {
+    throw new Error("Produto não encontrado.");
+  }
+
+  await deleteDoc(productRef);
+  await deleteGeneratedProductImage(existingProduct.imageUrl);
 }

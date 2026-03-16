@@ -8,7 +8,6 @@ export interface IProductDocumentDTO {
   bgColor: string;
   createdAt: Date;
   updatedAt: Date;
-  deletedAt?: Date;
 }
 
 export type IProductDTO = IProductDocumentDTO;
@@ -26,6 +25,5 @@ export interface IUpdateProductDTO {
   title?: string;
   description?: string;
   price?: number;
-  imageUrl?: string;
   bgColor?: string;
 }

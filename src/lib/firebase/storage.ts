@@ -1,4 +1,5 @@
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import type { FirebaseError } from "firebase/app";
+import { deleteObject, getDownloadURL, ref, uploadBytes } from "firebase/storage";
 
 import { storage } from "./client";
 
@@ -41,4 +42,21 @@ export async function uploadGeneratedProductImage(
   });
 
   return getDownloadURL(storageRef);
+}
+
+export async function deleteGeneratedProductImage(imageUrl: string) {
+  try {
+    await deleteObject(ref(storage, imageUrl));
+  } catch (error) {
+    const firebaseErrorCode =
+      typeof error === "object" && error !== null && "code" in error
+        ? (error as FirebaseError).code
+        : null;
+
+    if (firebaseErrorCode === "storage/object-not-found") {
+      return;
+    }
+
+    throw error;
+  }
 }

@@ -21,7 +21,6 @@ export interface FirestoreProductDocument {
   bgColor: string;
   createdAt: Date | Timestamp;
   updatedAt: Date | Timestamp;
-  deletedAt?: Date | Timestamp | null;
 }
 
 function toDate(value: Date | Timestamp | null | undefined): Date | undefined {
@@ -70,6 +69,5 @@ export function mapProductDocument(
     bgColor: data.bgColor,
     createdAt: toDate(data.createdAt) ?? new Date(),
     updatedAt: toDate(data.updatedAt) ?? new Date(),
-    deletedAt: toDate(data.deletedAt),
   };
 }

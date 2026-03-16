@@ -5,6 +5,7 @@ import type { IProductData } from "@/components/cards/ShareControllerCard";
 import ColorInput from "@/components/inputs/ColorInput";
 import CurrencyInput from "@/components/inputs/CurrencyInput";
 import TextAreaInput from "@/components/inputs/TextAreaInput";
+import TextInput from "@/components/inputs/TextInput";
 import Switcher from "@/components/miscellaneous/Switcher";
 import clsx from "clsx";
 import Image from "next/image";
@@ -29,13 +30,17 @@ export interface ProductManageCardProps {
   disabled?: boolean;
   /** Informa se há uma logo disponível para exibir */
   logoAvailable?: boolean;
+  /** Exibe o controle de logo no editor */
+  showLogoControl?: boolean;
 }
 
 const DEFAULT_BACKGROUND_COLOR = "#F7F7F7";
 const DEFAULT_TRANSPARENT_BACKGROUND_COLOR = "#FFFFFF";
 const MAX_DESCRIPTION_LENGTH = 250;
+const MAX_TITLE_LENGTH = 80;
 
 interface ProductManageCardFormState {
+  title: string;
   description: string;
   priceInput: string;
   showPrice: boolean;
@@ -103,6 +108,7 @@ function resolveFormState(
   product: ProductManageCardProduct,
 ): ProductManageCardFormState {
   return {
+    title: product.title ?? "",
     description: product.description ?? "",
     priceInput: normalizeInitialPrice(product.price),
     showPrice: resolveInitialShowPrice(product),
@@ -114,6 +120,7 @@ function resolveFormState(
 
 function buildPayload(
   product: ProductManageCardProduct,
+  title: string,
   description: string,
   price: number,
   showPrice: boolean,
@@ -121,7 +128,7 @@ function buildPayload(
   bgColor: string,
 ): ProductManageCardSavePayload {
   return {
-    title: product.title,
+    title,
     imageUrl: product.imageUrl,
     userId: product.userId,
     description,
@@ -137,6 +144,7 @@ function buildPayloadFromProduct(product: ProductManageCardProduct) {
 
   return buildPayload(
     product,
+    formState.title,
     formState.description,
     parsePriceInput(formState.priceInput),
     formState.showPrice,
@@ -174,11 +182,13 @@ export default function ProductManageCard({
   className,
   disabled = false,
   logoAvailable = true,
+  showLogoControl = true,
 }: ProductManageCardProps) {
   const initialFormState = resolveFormState(product);
   const lastEmittedPayloadRef = useRef<ProductManageCardSavePayload | null>(
     null,
   );
+  const [title, setTitle] = useState(initialFormState.title);
   const [description, setDescription] = useState(initialFormState.description);
   const [priceInput, setPriceInput] = useState(initialFormState.priceInput);
   const [showPrice, setShowPrice] = useState(initialFormState.showPrice);
@@ -194,7 +204,9 @@ export default function ProductManageCard({
     ? DEFAULT_TRANSPARENT_BACKGROUND_COLOR
     : selectedBgColor;
   const parsedPrice = parsePriceInput(priceInput);
-  const saveDisabled = disabled || (showPrice && parsedPrice <= 0);
+  const normalizedTitle = title.trim();
+  const saveDisabled =
+    disabled || !normalizedTitle || (showPrice && parsedPrice <= 0);
 
   useEffect(() => {
     const nextPayload = buildPayloadFromProduct(product);
@@ -206,6 +218,9 @@ export default function ProductManageCard({
 
     const nextFormState = resolveFormState(product);
 
+    setTitle((current) =>
+      current === nextFormState.title ? current : nextFormState.title,
+    );
     setDescription((current) =>
       current === nextFormState.description
         ? current
@@ -241,6 +256,7 @@ export default function ProductManageCard({
   ]);
 
   const emitChange = ({
+    nextTitle = title,
     nextDescription = description,
     nextPriceInput = priceInput,
     nextShowPrice = showPrice,
@@ -248,6 +264,7 @@ export default function ProductManageCard({
     nextSelectedBgColor = selectedBgColor,
     nextBgTransparent = bgTransparent,
   }: {
+    nextTitle?: string;
     nextDescription?: string;
     nextPriceInput?: string;
     nextShowPrice?: boolean;
@@ -265,6 +282,7 @@ export default function ProductManageCard({
 
     const nextPayload = buildPayload(
       product,
+      nextTitle,
       nextDescription,
       parsePriceInput(nextPriceInput),
       nextShowPrice,
@@ -274,6 +292,12 @@ export default function ProductManageCard({
 
     lastEmittedPayloadRef.current = nextPayload;
     onChange(nextPayload);
+  };
+
+  const handleTitleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const nextTitle = event.target.value;
+    setTitle(nextTitle);
+    emitChange({ nextTitle });
   };
 
   const handleDescriptionChange = (
@@ -323,6 +347,7 @@ export default function ProductManageCard({
     onSave(
       buildPayload(
         product,
+        normalizedTitle,
         description,
         parsedPrice,
         showPrice,
@@ -334,7 +359,7 @@ export default function ProductManageCard({
 
   return (
     <section
-      aria-label={`Gerenciamento do produto ${product.title}`}
+      aria-label={`Gerenciamento do produto ${normalizedTitle || product.title}`}
       className={clsx("w-full rounded-xl  bg-bg-card p-4  sm:p-6", className)}
     >
       <div className="grid w-full gap-5 lg:grid-cols-[232px_minmax(0,1fr)_248px] lg:items-start">
@@ -357,6 +382,20 @@ export default function ProductManageCard({
 
         <div className="flex w-full flex-col gap-4">
           <div className="w-full">
+            <TextInput
+              className="border-border-card bg-background"
+              containerClassName="w-full"
+              disabled={disabled}
+              id="product-manage-title"
+              label="Título"
+              maxLength={MAX_TITLE_LENGTH}
+              onChange={handleTitleChange}
+              placeholder="Nome do produto"
+              value={title}
+            />
+          </div>
+
+          <div className="w-full">
             <TextAreaInput
               className="min-h-[108px] resize-none border-border-card bg-background"
               containerClassName="w-full"
@@ -366,7 +405,7 @@ export default function ProductManageCard({
               label="Descrição"
               maxTextLength={MAX_DESCRIPTION_LENGTH}
               onChange={handleDescriptionChange}
-              placeholder="Descrição do produto, máximo de 100 caracteres"
+              placeholder="Descrição do produto, máximo de 250 caracteres"
               showTextLength={false}
               value={description}
             />
@@ -415,24 +454,26 @@ export default function ProductManageCard({
             </div>
 
             <div className="flex gap-4">
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-medium text-foreground sm:text-sm">
-                    Logo
-                  </span>
-                  <Switcher
-                    checked={showLogo}
-                    containerClassName="flex items-center"
-                    disabled={disabled || !logoAvailable}
-                    onChange={handleToggleShowLogo}
-                  />
+              {showLogoControl && (
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-medium text-foreground sm:text-sm">
+                      Logo
+                    </span>
+                    <Switcher
+                      checked={showLogo}
+                      containerClassName="flex items-center"
+                      disabled={disabled || !logoAvailable}
+                      onChange={handleToggleShowLogo}
+                    />
+                  </div>
+                  {!logoAvailable && (
+                    <span className="text-xs text-foreground/70">
+                      Faça login com uma conta que tenha avatar para usar a logo.
+                    </span>
+                  )}
                 </div>
-                {!logoAvailable && (
-                  <span className="text-xs text-foreground/70">
-                    Faça login com uma conta que tenha avatar para usar a logo.
-                  </span>
-                )}
-              </div>
+              )}
 
               <div className="mb-1 flex gap-3">
                 <div className="flex">
