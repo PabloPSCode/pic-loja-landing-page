@@ -1,24 +1,65 @@
-import type { ICreateUserDTO, IUpdateUserDTO, IUserDTO, IUserDocumentDTO } from "@/dtos/user.dto";
-import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
+import type {
+  ICreateUserDTO,
+  IUpdateUserDTO,
+  IUserDTO,
+  IUserDocumentDTO,
+  UserPlan,
+} from "@/dtos/user.dto";
+import { doc, getDoc, runTransaction, setDoc, updateDoc } from "firebase/firestore";
 
+import { auth } from "./auth";
 import { db } from "./client";
 import {
   type FirestoreUserDocument,
   mapUserDocument,
 } from "./firestore-mappers";
 import { getProductsByUserId } from "./products";
+import {
+  applyCreditConsumption,
+  applyCreditRefund,
+  FREE_USER_CREDITS,
+  type PaidUserPlan,
+  normalizeUserCredits,
+} from "./user-credits";
 
 const USERS_COLLECTION = "users";
 
 interface CreateUserProfileInput extends Omit<ICreateUserDTO, "password"> {
+  activePlan?: UserPlan;
   avatarUrl?: string;
-  credits?: number;
+  availableCredits?: number;
+  consumedCredits?: number;
+  lastPlanCreditMonth?: string | null;
 }
 
 interface SyncAuthenticatedUserProfileInput {
   name: string;
   email: string;
   avatarUrl?: string;
+}
+
+interface SerializedUserDocument
+  extends Omit<IUserDocumentDTO, "createdAt" | "updatedAt" | "deletedAt"> {
+  createdAt: string;
+  deletedAt?: string;
+  updatedAt: string;
+}
+
+interface UpgradePlanResponsePayload {
+  error?: string;
+  user?: SerializedUserDocument;
+}
+
+export async function getAuthenticatedUserProfile(
+  userId: string,
+): Promise<IUserDocumentDTO> {
+  const userDocument = await getUserDocumentById(userId);
+
+  if (!userDocument) {
+    throw new Error("Perfil do usuario nao foi encontrado no Firestore.");
+  }
+
+  return userDocument;
 }
 
 function buildUserPayload(
@@ -28,7 +69,29 @@ function buildUserPayload(
     ...(data.name !== undefined ? { name: data.name } : {}),
     ...(data.email !== undefined ? { email: data.email } : {}),
     ...(data.avatarUrl !== undefined ? { avatarUrl: data.avatarUrl } : {}),
-    ...(data.credits !== undefined ? { credits: data.credits } : {}),
+    ...(data.activePlan !== undefined ? { activePlan: data.activePlan } : {}),
+    ...(data.availableCredits !== undefined
+      ? { availableCredits: data.availableCredits }
+      : {}),
+    ...(data.consumedCredits !== undefined
+      ? { consumedCredits: data.consumedCredits }
+      : {}),
+    ...(data.lastPlanCreditMonth !== undefined
+      ? { lastPlanCreditMonth: data.lastPlanCreditMonth }
+      : {}),
+  };
+}
+
+function deserializeUserDocument(
+  serializedUser: SerializedUserDocument,
+): IUserDocumentDTO {
+  return {
+    ...serializedUser,
+    createdAt: new Date(serializedUser.createdAt),
+    deletedAt: serializedUser.deletedAt
+      ? new Date(serializedUser.deletedAt)
+      : undefined,
+    updatedAt: new Date(serializedUser.updatedAt),
   };
 }
 
@@ -41,7 +104,10 @@ export async function createUserProfile(
   const payload: FirestoreUserDocument = {
     name: data.name,
     email: data.email,
-    credits: data.credits ?? 0,
+    activePlan: data.activePlan ?? null,
+    availableCredits: data.availableCredits ?? FREE_USER_CREDITS,
+    consumedCredits: data.consumedCredits ?? 0,
+    lastPlanCreditMonth: data.lastPlanCreditMonth ?? null,
     createdAt: now,
     updatedAt: now,
     deletedAt: null,
@@ -99,13 +165,66 @@ export async function updateUserProfile(
   return getUserDocumentById(userId);
 }
 
+async function updateUserCreditsByDelta(
+  userId: string,
+  delta: number,
+): Promise<IUserDocumentDTO> {
+  const userRef = doc(db, USERS_COLLECTION, userId);
+
+  return runTransaction(db, async (transaction) => {
+    const userSnapshot = await transaction.get(userRef);
+
+    if (!userSnapshot.exists()) {
+      throw new Error("Perfil do usuario nao foi encontrado no Firestore.");
+    }
+
+    const currentUser = userSnapshot.data() as FirestoreUserDocument;
+    const normalizedCredits = normalizeUserCredits(currentUser);
+    const nextCredits =
+      delta > 0
+        ? applyCreditConsumption(normalizedCredits, delta)
+        : applyCreditRefund(normalizedCredits, Math.abs(delta));
+    const updatedAt = new Date();
+
+    transaction.update(userRef, {
+      activePlan: nextCredits.activePlan,
+      availableCredits: nextCredits.availableCredits,
+      consumedCredits: nextCredits.consumedCredits,
+      lastPlanCreditMonth: nextCredits.lastPlanCreditMonth,
+      updatedAt,
+    });
+
+    return mapUserDocument(userSnapshot.id, {
+      ...currentUser,
+      activePlan: nextCredits.activePlan,
+      availableCredits: nextCredits.availableCredits,
+      consumedCredits: nextCredits.consumedCredits,
+      lastPlanCreditMonth: nextCredits.lastPlanCreditMonth,
+      updatedAt,
+    });
+  });
+}
+
+export async function consumeUserCredit(
+  userId: string,
+): Promise<IUserDocumentDTO> {
+  return updateUserCreditsByDelta(userId, 1);
+}
+
+export async function refundUserCredit(
+  userId: string,
+): Promise<IUserDocumentDTO> {
+  return updateUserCreditsByDelta(userId, -1);
+}
+
 export async function syncAuthenticatedUserProfile(
   userId: string,
   data: SyncAuthenticatedUserProfileInput,
 ): Promise<IUserDocumentDTO> {
-  const existingUser = await getUserDocumentById(userId);
+  const userRef = doc(db, USERS_COLLECTION, userId);
+  const userSnapshot = await getDoc(userRef);
 
-  if (!existingUser) {
+  if (!userSnapshot.exists()) {
     return createUserProfile(userId, {
       name: data.name,
       email: data.email,
@@ -113,10 +232,16 @@ export async function syncAuthenticatedUserProfile(
     });
   }
 
+  const currentUser = userSnapshot.data() as FirestoreUserDocument;
+  const normalizedCredits = normalizeUserCredits(currentUser);
   const updatedUser = await updateUserProfile(userId, {
     name: data.name,
     email: data.email,
     avatarUrl: data.avatarUrl,
+    activePlan: normalizedCredits.activePlan,
+    availableCredits: normalizedCredits.availableCredits,
+    consumedCredits: normalizedCredits.consumedCredits,
+    lastPlanCreditMonth: normalizedCredits.lastPlanCreditMonth,
   });
 
   if (!updatedUser) {
@@ -125,3 +250,38 @@ export async function syncAuthenticatedUserProfile(
 
   return updatedUser;
 }
+
+export async function upgradeAuthenticatedUserPlan(
+  plan: PaidUserPlan,
+): Promise<IUserDocumentDTO> {
+  const authenticatedUser = auth.currentUser;
+
+  if (!authenticatedUser) {
+    throw new Error("Faça login novamente antes de alterar o plano.");
+  }
+
+  const idToken = await authenticatedUser.getIdToken();
+  const response = await fetch("/api/users/plan/upgrade", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${idToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ plan }),
+  });
+
+  const payload = (await response
+    .json()
+    .catch(() => null)) as UpgradePlanResponsePayload | null;
+
+  if (!response.ok || !payload?.user) {
+    throw new Error(
+      payload?.error ??
+        "Nao foi possivel atualizar o plano do usuario no momento.",
+    );
+  }
+
+  return deserializeUserDocument(payload.user);
+}
+
+export { FREE_USER_CREDITS };

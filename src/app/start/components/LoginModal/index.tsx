@@ -71,22 +71,26 @@ export default function LoginModal({
         throw new Error("O Google nao retornou nome e email para esta conta.");
       }
 
-      try {
-        await syncAuthenticatedUserProfile(credentialResult.user.uid, {
-          name: resolvedName,
-          email: resolvedEmail,
-          avatarUrl: resolvedAvatarUrl,
-        });
-      } catch (syncError) {
-        console.error("Failed to sync authenticated user to Firestore:", syncError);
-      }
-
-      await onAuthenticate?.({
-        id: credentialResult.user.uid,
+      const syncedUser = await syncAuthenticatedUserProfile(credentialResult.user.uid, {
         name: resolvedName,
         email: resolvedEmail,
         avatarUrl: resolvedAvatarUrl,
       });
+
+      try {
+        await onAuthenticate?.({
+          id: credentialResult.user.uid,
+          name: resolvedName,
+          email: resolvedEmail,
+          activePlan: syncedUser.activePlan,
+          availableCredits: syncedUser.availableCredits,
+          consumedCredits: syncedUser.consumedCredits,
+          avatarUrl: resolvedAvatarUrl,
+        });
+      } catch (syncError) {
+        console.error("Failed to sync authenticated user to app state:", syncError);
+        throw syncError;
+      }
     } catch (error) {
       setAuthError(getFriendlyAuthErrorMessage(error));
     } finally {

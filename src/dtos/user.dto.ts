@@ -1,11 +1,16 @@
 import type { IProductDTO } from "./product.dto";
 
+export type UserPlan = "essential" | "advanced" | "professional" | null;
+
 export interface IUserDocumentDTO {
   id: string;
   name: string;
   email: string;
   avatarUrl?: string;
-  credits: number;
+  activePlan: UserPlan;
+  availableCredits: number;
+  consumedCredits: number;
+  lastPlanCreditMonth: string | null;
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date;
@@ -28,4 +33,8 @@ export interface IUpdateUserDTO {
   email?: string;
   password?: string;
   avatarUrl?: string;
+  activePlan?: UserPlan;
+  availableCredits?: number;
+  consumedCredits?: number;
+  lastPlanCreditMonth?: string | null;
 }

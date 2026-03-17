@@ -9,7 +9,6 @@ import DestructiveModal from "@/components/modals/DestructiveModal";
 import GenericModal from "@/components/modals/GenericModal";
 import { getProductsByUserId, updateProduct, deleteProduct } from "@/lib/firebase/products";
 import type { IProductDocumentDTO } from "@/dtos/product.dto";
-import { mockedUserData } from "@/mocks";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCallback, useEffect, useState } from "react";
 
@@ -222,8 +221,8 @@ export default function MyProducts() {
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 sm:gap-6">
         <UserCard
           userName={user.name}
-          usedCredits={mockedUserData.usedCredits}
-          totalCredits={mockedUserData.totalCredits}
+          availableCredits={user.availableCredits}
+          consumedCredits={user.consumedCredits}
         />
 
         <section className="w-full rounded-xl border border-foreground/10 bg-bg-card p-5 shadow-sm sm:p-8">

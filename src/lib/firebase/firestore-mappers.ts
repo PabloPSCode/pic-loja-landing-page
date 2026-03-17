@@ -2,11 +2,18 @@ import type { IProductDocumentDTO } from "@/dtos/product.dto";
 import type { IUserDocumentDTO } from "@/dtos/user.dto";
 import { Timestamp } from "firebase/firestore";
 
+import { normalizeUserCredits } from "./user-credits";
+
 export interface FirestoreUserDocument {
   name: string;
   email: string;
   avatarUrl?: string;
-  credits: number;
+  activePlan?: IUserDocumentDTO["activePlan"];
+  availableCredits?: number;
+  consumedCredits?: number;
+  credits?: number;
+  lastPlanCreditMonth?: string | null;
+  purchasedCredits?: number;
   createdAt: Date | Timestamp;
   updatedAt: Date | Timestamp;
   deletedAt?: Date | Timestamp | null;
@@ -36,6 +43,14 @@ function toDate(value: Date | Timestamp | null | undefined): Date | undefined {
     return value.toDate();
   }
 
+  if (typeof value === "object" && value !== null) {
+    const timestampLike = value as { toDate?: unknown };
+
+    if (typeof timestampLike.toDate === "function") {
+      return timestampLike.toDate();
+    }
+  }
+
   return new Date(value);
 }
 
@@ -43,12 +58,17 @@ export function mapUserDocument(
   id: string,
   data: FirestoreUserDocument,
 ): IUserDocumentDTO {
+  const normalizedCredits = normalizeUserCredits(data);
+
   return {
     id,
     name: data.name,
     email: data.email,
     avatarUrl: data.avatarUrl,
-    credits: data.credits,
+    activePlan: normalizedCredits.activePlan,
+    availableCredits: normalizedCredits.availableCredits,
+    consumedCredits: normalizedCredits.consumedCredits,
+    lastPlanCreditMonth: normalizedCredits.lastPlanCreditMonth,
     createdAt: toDate(data.createdAt) ?? new Date(),
     updatedAt: toDate(data.updatedAt) ?? new Date(),
     deletedAt: toDate(data.deletedAt),

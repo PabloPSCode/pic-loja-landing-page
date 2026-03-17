@@ -3,6 +3,7 @@
 import Footer from "@/components/elements/Footer";
 import LandingHeader from "@/components/elements/LandingHeader";
 import Paragraph from "@/components/typography/Paragraph";
+import { getAuthenticatedUserProfile } from "@/lib/firebase/users";
 import {
   footerContactItems,
   footerLegalItems,
@@ -11,19 +12,60 @@ import {
   landingNavItems,
   landingPageContent,
 } from "@/mocks/piclojaLanding";
+import { useAuthStore } from "@/stores/auth-store";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function LayoutShell({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const authenticatedUser = useAuthStore((state) => state.user);
+  const syncAuthenticatedUser = useAuthStore((state) => state.syncUser);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
   };
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const refreshAuthenticatedUser = async () => {
+      if (!authenticatedUser?.id) {
+        return;
+      }
+
+      try {
+        const userProfile = await getAuthenticatedUserProfile(authenticatedUser.id);
+
+        if (isCancelled) {
+          return;
+        }
+
+        syncAuthenticatedUser({
+          id: userProfile.id,
+          name: userProfile.name,
+          email: userProfile.email,
+          activePlan: userProfile.activePlan,
+          availableCredits: userProfile.availableCredits,
+          consumedCredits: userProfile.consumedCredits,
+          ...(userProfile.avatarUrl ? { avatarUrl: userProfile.avatarUrl } : {}),
+        });
+      } catch (error) {
+        if (!isCancelled) {
+          console.error("Nao foi possivel atualizar o usuario autenticado:", error);
+        }
+      }
+    };
+
+    void refreshAuthenticatedUser();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [authenticatedUser?.id, syncAuthenticatedUser]);
 
   return (
     <>

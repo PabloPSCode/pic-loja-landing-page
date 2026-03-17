@@ -1,3 +1,5 @@
+import type { UserPlan } from "@/dtos/user.dto";
+
 export type LandingNavItem = {
   href: string;
   label: string;
@@ -33,6 +35,7 @@ export type LandingPlan = {
   discountPercentage?: number;
   isBestOption?: boolean;
   oldPrice?: string;
+  plan: Exclude<UserPlan, null>;
   resources: string[];
   subtitle: string;
   title: string;
@@ -238,12 +241,13 @@ export const landingPlans: LandingPlan[] = [
   {
     buttonTitle: "Escolher Essencial",
     currentPrice: "R$ 9,90/mês",
+    plan: "essential",
     resources: [
-      "Até 50 créditos por mês",
+      "100 créditos por mês",
       "Exportação pronta para compartilhar",
       "Suporte dedicado",
     ],
-    subtitle: "Para quem quer testar o fluxo e gerar produtos rapidamente.",
+    subtitle: "Para quem gera produtos ocasionalmente.",
     title: "Essencial",
   },
   {
@@ -252,8 +256,9 @@ export const landingPlans: LandingPlan[] = [
     discountPercentage: 35,
     isBestOption: false,
     oldPrice: "R$ 29,90/mês",
+    plan: "advanced",
     resources: [
-      "Até 200 créditos por mês",
+      "300 créditos por mês",
       "Tratamento visual avançado",
       "Exportação pronta para compartilhar",
       "Suporte dedicado",
@@ -267,8 +272,9 @@ export const landingPlans: LandingPlan[] = [
     discountPercentage: 50,
     isBestOption: true,
     oldPrice: "R$ 59,90/mês",
+    plan: "professional",
     resources: [
-      "Até 1.000 créditos por mês",
+      "1.000 créditos por mês",
       "Tratamento visual avançado",
       "Exportação pronta para compartilhar",
       "Suporte dedicado",

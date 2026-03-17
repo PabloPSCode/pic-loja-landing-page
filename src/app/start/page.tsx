@@ -1,5 +1,6 @@
 "use client";
 
+import DealCard from "@/components/cards/DealCard";
 import NoImageCard from "@/components/cards/NoImageCard";
 import ProductManageCard from "@/components/cards/ProductManageCard";
 import ShareControllerCard, {
@@ -8,7 +9,17 @@ import ShareControllerCard, {
 import SimpleProductCard from "@/components/cards/SimpleProductCard";
 import UserCard from "@/components/cards/UserCard";
 import StepIndicator from "@/components/miscellaneous/StepIndicator";
-import { mockedUserData } from "@/mocks";
+import GenericModal from "@/components/modals/GenericModal";
+import { createProduct } from "@/lib/firebase/products";
+import { uploadGeneratedProductImage } from "@/lib/firebase/storage";
+import type { PaidUserPlan } from "@/lib/firebase/user-credits";
+import {
+  FREE_USER_CREDITS,
+  consumeUserCredit,
+  refundUserCredit,
+  upgradeAuthenticatedUserPlan,
+} from "@/lib/firebase/users";
+import { landingPageContent, landingPlans } from "@/mocks/piclojaLanding";
 import { type AuthUser, useAuthStore } from "@/stores/auth-store";
 import {
   CameraIcon,
@@ -27,8 +38,6 @@ import {
 } from "react";
 import LoginModal from "./components/LoginModal";
 import { PublishTabService } from "./services/publishTabService";
-import { createProduct } from "@/lib/firebase/products";
-import { uploadGeneratedProductImage } from "@/lib/firebase/storage";
 
 const TOTAL_STEPS = 3;
 
@@ -40,14 +49,10 @@ interface ImageObjectAnalysisResponse {
   containsObject: boolean;
 }
 
-interface IUserData {
-  name: string;
-  usedCredits: number;
-  totalCredits: number;
-}
-
 export default function Start() {
   const authenticatedUser = useAuthStore((state) => state.user);
+  const syncAuthenticatedUser = useAuthStore((state) => state.syncUser);
+  const setAuthenticatedUserCredits = useAuthStore((state) => state.setCredits);
 
   const [activeStep, setActiveStep] = useState<ActiveStep>("upload");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -56,6 +61,10 @@ export default function Start() {
   const [isProductGenerated, setIsProductGenerated] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showPricingModal, setShowPricingModal] = useState(false);
+  const [isUpgradingPlan, setIsUpgradingPlan] = useState<PaidUserPlan | null>(
+    null,
+  );
   const [isProductSaved, setIsProductSaved] = useState(false);
   const [isSavingProduct, setIsSavingProduct] = useState(false);
   const generationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
@@ -73,11 +82,9 @@ export default function Start() {
   });
 
   const logUserIn = useAuthStore((state) => state.login);
-  const userData: IUserData = {
-    name: authenticatedUser?.name || "Usuário",
-    usedCredits: mockedUserData.usedCredits,
-    totalCredits: mockedUserData.totalCredits,
-  };
+  const availableCredits =
+    authenticatedUser?.availableCredits ?? FREE_USER_CREDITS;
+  const consumedCredits = authenticatedUser?.consumedCredits ?? 0;
 
   useEffect(() => {
     return () => {
@@ -167,6 +174,19 @@ export default function Start() {
     setIsProductSaved(false);
   };
 
+  const handleOpenPricingModal = useCallback(() => {
+    setGenerationError(null);
+    setShowPricingModal(true);
+  }, []);
+
+  const handleClosePricingModal = useCallback(() => {
+    if (isUpgradingPlan) {
+      return;
+    }
+
+    setShowPricingModal(false);
+  }, [isUpgradingPlan]);
+
   const removeBg = async (file: File) => {
     const formData = new FormData();
     formData.append("image", file);
@@ -237,69 +257,114 @@ export default function Start() {
     };
   };
 
-  const startProductGeneration = async () => {
-    if (!uploadedFile) return;
+  const startProductGeneration = useCallback(
+    async (userId = authenticatedUser?.id) => {
+      if (!uploadedFile || !userId) return;
 
-    setGenerationError(null);
-    setActiveStep("generate");
-    setIsGenerating(true);
-    setIsProductGenerated(false);
+      let shouldRefundCredit = false;
 
-    if (generationTimeoutRef.current) {
-      clearTimeout(generationTimeoutRef.current);
-    }
-
-    try {
-      const [analysis] = await Promise.all([
-        removeBg(uploadedFile).then(() =>
-          requestProductCopyFromUploadedImage(uploadedFile),
-        ),
-        new Promise((resolve) => {
-          generationTimeoutRef.current = setTimeout(() => {
-            generationTimeoutRef.current = null;
-            resolve(true);
-          }, 3000);
-        }),
-      ]);
-
-      if (
-        !analysis.containsObject ||
-        !analysis.title ||
-        !analysis.description
-      ) {
-        setGenerationError(
-          "Nao encontramos um unico objeto claro na imagem. Envie outra foto para gerar o produto.",
-        );
-        setIsGenerating(false);
-        setActiveStep("upload");
-        return;
-      }
-
-      setProductData((prev) => ({
-        ...prev,
-        title: analysis.title!,
-        description: analysis.description!,
-      }));
-      setIsGenerating(false);
-      setIsProductGenerated(true);
-    } catch (error) {
       if (generationTimeoutRef.current) {
         clearTimeout(generationTimeoutRef.current);
-        generationTimeoutRef.current = null;
       }
 
-      setGenerationError(
-        error instanceof Error
-          ? error.message
-          : "Nao foi possivel gerar o produto a partir da imagem enviada.",
-      );
-      setIsGenerating(false);
-      setIsProductGenerated(false);
-      setActiveStep("upload");
-    }
-  };
+      try {
+        const updatedUser = await consumeUserCredit(userId);
+        shouldRefundCredit = true;
+        setAuthenticatedUserCredits(
+          updatedUser.availableCredits,
+          updatedUser.consumedCredits,
+        );
 
-  const handleGenerateProduct = async () => {
+        setGenerationError(null);
+        setActiveStep("generate");
+        setIsGenerating(true);
+        setIsProductGenerated(false);
+
+        const [analysis] = await Promise.all([
+          removeBg(uploadedFile).then(() =>
+            requestProductCopyFromUploadedImage(uploadedFile),
+          ),
+          new Promise((resolve) => {
+            generationTimeoutRef.current = setTimeout(() => {
+              generationTimeoutRef.current = null;
+              resolve(true);
+            }, 3000);
+          }),
+        ]);
+
+        if (
+          !analysis.containsObject ||
+          !analysis.title ||
+          !analysis.description
+        ) {
+          setGenerationError(
+            "Nao encontramos um unico objeto claro na imagem. Envie outra foto para gerar o produto.",
+          );
+          setIsGenerating(false);
+          setActiveStep("upload");
+          return;
+        }
+
+        setProductData((prev) => ({
+          ...prev,
+          title: analysis.title!,
+          description: analysis.description!,
+        }));
+        shouldRefundCredit = false;
+        setIsGenerating(false);
+        setIsProductGenerated(true);
+      } catch (error) {
+        if (generationTimeoutRef.current) {
+          clearTimeout(generationTimeoutRef.current);
+          generationTimeoutRef.current = null;
+        }
+
+        if (shouldRefundCredit) {
+          try {
+            const refundedUser = await refundUserCredit(userId);
+            setAuthenticatedUserCredits(
+              refundedUser.availableCredits,
+              refundedUser.consumedCredits,
+            );
+          } catch (refundError) {
+            console.error(
+              "Nao foi possivel restaurar o credito do usuario:",
+              refundError,
+            );
+          }
+        }
+
+        if (
+          error instanceof Error &&
+          error.message ===
+            "Voce nao possui creditos suficientes para gerar uma imagem."
+        ) {
+          handleOpenPricingModal();
+          setIsGenerating(false);
+          setIsProductGenerated(false);
+          setActiveStep("upload");
+          return;
+        }
+
+        setGenerationError(
+          error instanceof Error
+            ? error.message
+            : "Nao foi possivel gerar o produto a partir da imagem enviada.",
+        );
+        setIsGenerating(false);
+        setIsProductGenerated(false);
+        setActiveStep("upload");
+      }
+    },
+    [
+      authenticatedUser?.id,
+      handleOpenPricingModal,
+      uploadedFile,
+      setAuthenticatedUserCredits,
+    ],
+  );
+
+  const handleGenerateProduct = useCallback(async () => {
     if (!uploadedFile) return;
 
     if (!authenticatedUser) {
@@ -307,8 +372,13 @@ export default function Start() {
       return;
     }
 
+    if ((authenticatedUser.availableCredits ?? 0) < 1) {
+      handleOpenPricingModal();
+      return;
+    }
+
     await startProductGeneration();
-  };
+  }, [authenticatedUser, handleOpenPricingModal, startProductGeneration]);
 
   const mapActiveStepToIndex = (step: ActiveStep) => {
     switch (step) {
@@ -323,11 +393,85 @@ export default function Start() {
     }
   };
 
-  const handleAuthenticate = ({ id, name, email, avatarUrl }: AuthUser) => {
-    logUserIn(id, name, email, avatarUrl);
-    setShowAuthModal(false);
-    startProductGeneration();
-  };
+  const handleAuthenticate = useCallback(
+    ({
+      id,
+      name,
+      email,
+      activePlan,
+      availableCredits,
+      consumedCredits,
+      avatarUrl,
+    }: AuthUser) => {
+      logUserIn({
+        id,
+        name,
+        email,
+        activePlan,
+        availableCredits,
+        consumedCredits,
+        ...(avatarUrl ? { avatarUrl } : {}),
+      });
+      setShowAuthModal(false);
+
+      if (availableCredits < 1) {
+        handleOpenPricingModal();
+        return;
+      }
+
+      startProductGeneration(id);
+    },
+    [handleOpenPricingModal, logUserIn, startProductGeneration],
+  );
+
+  const handleUpgradePlan = useCallback(
+    async (plan: PaidUserPlan) => {
+      if (!authenticatedUser) {
+        setShowPricingModal(false);
+        setShowAuthModal(true);
+        return;
+      }
+
+      setIsUpgradingPlan(plan);
+      setGenerationError(null);
+
+      try {
+        const updatedUser = await upgradeAuthenticatedUserPlan(plan);
+        const nextAuthenticatedUser: AuthUser = {
+          id: updatedUser.id,
+          name: updatedUser.name,
+          email: updatedUser.email,
+          activePlan: updatedUser.activePlan,
+          availableCredits: updatedUser.availableCredits,
+          consumedCredits: updatedUser.consumedCredits,
+          ...(updatedUser.avatarUrl
+            ? { avatarUrl: updatedUser.avatarUrl }
+            : {}),
+        };
+
+        syncAuthenticatedUser(nextAuthenticatedUser);
+        setShowPricingModal(false);
+
+        if (uploadedFile && updatedUser.availableCredits > 0) {
+          await startProductGeneration(updatedUser.id);
+        }
+      } catch (error) {
+        setGenerationError(
+          error instanceof Error
+            ? error.message
+            : "Nao foi possivel ativar o plano selecionado.",
+        );
+      } finally {
+        setIsUpgradingPlan(null);
+      }
+    },
+    [
+      authenticatedUser,
+      startProductGeneration,
+      syncAuthenticatedUser,
+      uploadedFile,
+    ],
+  );
 
   const handleToggleAuthModal = () => {
     setShowAuthModal((prev) => !prev);
@@ -435,9 +579,9 @@ export default function Start() {
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 sm:gap-6">
         {authenticatedUser && (
           <UserCard
-            userName={userData.name}
-            usedCredits={userData.usedCredits}
-            totalCredits={userData.totalCredits}
+            userName={authenticatedUser.name}
+            availableCredits={availableCredits}
+            consumedCredits={consumedCredits}
             onLogout={handleLogout}
           />
         )}
@@ -555,6 +699,50 @@ export default function Start() {
           onAuthenticate={handleAuthenticate}
         />
       )}
+      <GenericModal
+        className="!max-w-7xl !lg:min-w-[60vw]"
+        description={landingPageContent.plans.description}
+        open={showPricingModal}
+        onClose={handleClosePricingModal}
+        title="Você não possui créditos suficientes para gerar um novo produto."
+      >
+        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {landingPlans.map((plan) => {
+            const isCurrentPlan = authenticatedUser?.activePlan === plan.plan;
+            const isSubmittingPlan = isUpgradingPlan === plan.plan;
+
+            return (
+              <div className="-mt-4" key={plan.title}>
+                <DealCard
+                  buttonClassName={
+                    plan.isBestOption
+                      ? "!bg-foreground !text-white hover:!bg-tertiary-800"
+                      : "!border-foreground/20 !text-foreground hover:!bg-black/5"
+                  }
+                  buttonDisabled={Boolean(isUpgradingPlan) || isCurrentPlan}
+                  buttonTitle={
+                    isSubmittingPlan
+                      ? "Ativando..."
+                      : isCurrentPlan
+                        ? "Plano atual"
+                        : plan.buttonTitle
+                  }
+                  className="h-full"
+                  currentPrice={plan.currentPrice}
+                  currentPriceClassName="!text-foreground"
+                  discountPercentage={plan.discountPercentage}
+                  isBestOption={plan.isBestOption}
+                  oldPrice={plan.oldPrice}
+                  onSeeDetails={() => void handleUpgradePlan(plan.plan)}
+                  resources={plan.resources}
+                  subtitle={plan.subtitle}
+                  title={plan.title}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </GenericModal>
     </main>
   );
 }

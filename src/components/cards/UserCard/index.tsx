@@ -12,18 +12,16 @@ import type { ReactNode } from "react";
 export interface UserCardProps {
   /** Nome do usuário */
   userName: string;
-  /** Quantidade de créditos utilizados */
-  usedCredits: number | string;
-  /** Quantidade total de créditos */
-  totalCredits: number | string;
+  /** Quantidade de créditos disponíveis */
+  availableCredits: number | string;
+  /** Quantidade de créditos consumidos */
+  consumedCredits: number | string;
   /** Saudação exibida antes do nome */
   greeting?: string;
   /** Ícone do bloco do usuário */
   userIcon?: ReactNode;
   /** Ícone do bloco de créditos */
   creditsIcon?: ReactNode;
-  /** Texto exibido após os créditos */
-  creditsSuffix?: string;
   /** Classes adicionais para o contêiner */
   className?: string;
   /** Classes adicionais para o texto principal */
@@ -47,12 +45,11 @@ export interface UserCardProps {
  */
 export default function UserCard({
   userName,
-  usedCredits,
-  totalCredits,
+  availableCredits,
+  consumedCredits,
   greeting = "Olá",
   userIcon,
   creditsIcon,
-  creditsSuffix = "créditos utilizados.",
   className,
   userTextClassName,
   creditsTextClassName,
@@ -178,7 +175,7 @@ export default function UserCard({
               creditsTextClassName,
             )}
           >
-            {usedCredits}/{totalCredits} {creditsSuffix}
+            Você tem {availableCredits} créditos disponíveis.
           </p>
         </div>
       </div>

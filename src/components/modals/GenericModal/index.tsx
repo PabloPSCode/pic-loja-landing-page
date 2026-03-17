@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import { XIcon } from "@phosphor-icons/react";
 import clsx from "clsx";
@@ -6,13 +6,13 @@ import React from "react";
 import { Modal } from "react-responsive-modal";
 import "react-responsive-modal/styles.css";
 
-type Size = "sm" | "md" | "lg" | "xl";
+type Size = "xl" | "2xl" | "3xl" | "4xl";
 
 const sizeMap: Record<Size, string> = {
-  sm: "max-w-sm",
-  md: "max-w-md",
-  lg: "max-w-lg",
-  xl: "max-w-2xl",
+  xl: "max-w-md",
+  "2xl": "max-w-2xl",
+  "3xl": "max-w-3xl",
+  "4xl": "max-w-4xl",
 };
 
 export interface GenericModalProps {
@@ -55,7 +55,7 @@ export default function GenericModal({
   center = true,
   closeOnOverlayClick = true,
   showCloseButton = true,
-  size = "md",
+  size = "2xl",
   className,
   overlayClassName,
   containerClassName,
@@ -70,9 +70,9 @@ export default function GenericModal({
   cancelButtonClassName,
   confirmButtonClassName,
 }: GenericModalProps) {
-  const titleId = title ? ariaLabelledby ?? "generic-modal-title" : undefined;
+  const titleId = title ? (ariaLabelledby ?? "generic-modal-title") : undefined;
   const descId = description
-    ? ariaDescribedby ?? "generic-modal-description"
+    ? (ariaDescribedby ?? "generic-modal-description")
     : undefined;
 
   return (
@@ -86,14 +86,14 @@ export default function GenericModal({
       classNames={{
         overlay: clsx(
           "bg-black/50 dark:bg-black/70 backdrop-blur-[2px]",
-          overlayClassName
+          overlayClassName,
         ),
         modal: clsx(
           center
             ? "!bg-transparent m-4 sm:m-0"
             : "!bg-transparent !p-0 !m-0 !shadow-none !mt-4",
-          "w-[calc(100vw-1.5rem)] sm:w-auto", // small devices fit
-          containerClassName
+          "w-[calc(100vw-1.5rem)] sm:min-w-[50vw]", // small devices fit
+          containerClassName,
         ),
         closeButton: "top-3 right-3 text-foreground/70 hover:text-foreground",
       }}
@@ -116,7 +116,7 @@ export default function GenericModal({
           "w-full",
           "max-h-[calc(100vh-2rem)] sm:max-h-[calc(100vh-4rem)] overflow-auto",
           sizeMap[size],
-          className
+          className,
         )}
       >
         {(title || description) && (
@@ -141,35 +141,35 @@ export default function GenericModal({
 
         <div className="p-4 sm:p-5">{children}</div>
 
-        <div className="flex items-center justify-end gap-4 p-4 sm:p-5">
-          {showCancelButton && (
-            <button
-              onClick={onClose}
-              className={clsx(
-                "px-4 py-2 rounded-md text-white text-xs sm:text-sm bg-red-500",
-                cancelButtonClassName
-              )}
-            >
-              {cancelButtonLabel || "Cancelar"}
-            </button>
-          )}
-          {showConfirmButton && (
-            <button
-              onClick={onConfirm}
-              className={clsx(
-                "px-4 py-2 rounded-md text-white text-xs sm:text-sm bg-blue-500",
-                "disabled:opacity-50",
-                confirmButtonClassName
-              )}
-              disabled={confirmButtonDisabled}
-            >
-              {confirmButtonLabel || "Confirmar"}
-            </button>
-          )}
-        </div>
+        {(showCancelButton || showConfirmButton) && (
+          <div className="flex items-center justify-end gap-4 p-4 sm:p-5">
+            {showCancelButton && (
+              <button
+                onClick={onClose}
+                className={clsx(
+                  "px-4 py-2 rounded-md text-white text-xs sm:text-sm bg-red-500",
+                  cancelButtonClassName,
+                )}
+              >
+                {cancelButtonLabel || "Cancelar"}
+              </button>
+            )}
+            {showConfirmButton && (
+              <button
+                onClick={onConfirm}
+                className={clsx(
+                  "px-4 py-2 rounded-md text-white text-xs sm:text-sm bg-blue-500",
+                  "disabled:opacity-50",
+                  confirmButtonClassName,
+                )}
+                disabled={confirmButtonDisabled}
+              >
+                {confirmButtonLabel || "Confirmar"}
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </Modal>
   );
 }
-
-

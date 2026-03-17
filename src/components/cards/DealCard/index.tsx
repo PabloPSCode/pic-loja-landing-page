@@ -16,6 +16,7 @@ export interface DealCardProps {
   currentPrice: string;
   oldPrice?: string;
   resources: Resource[];
+  buttonDisabled?: boolean;
   buttonTitle?: string;
   onSeeDetails: () => void;
   isBestOption?: boolean;
@@ -36,6 +37,7 @@ export default function DealCard({
   currentPrice,
   oldPrice,
   resources,
+  buttonDisabled = false,
   onSeeDetails,
   buttonTitle,
   isBestOption,
@@ -87,7 +89,7 @@ export default function DealCard({
       {subtitle && (
         <span
           className={clsx(
-            "mt-2 sm:mt-3 mb-3 sm:mb-4 text-sm sm:text-base text-center text-black/70 dark:text-white/70",
+            "mt-2 sm:mt-3 mb-3 sm:mb-4 text-xs sm:text-sm text-center text-black/70 dark:text-white/70",
             subtitleClassName
           )}
         >
@@ -109,7 +111,7 @@ export default function DealCard({
 
       <span
         className={clsx(
-          "mt-1 mb-3 sm:mb-4 text-xl sm:text-2xl font-bold text-center text-emerald-600 dark:text-emerald-400",
+          "mt-1 mb-3 sm:mb-4 text-lg sm:text-xl font-bold text-center text-emerald-600 dark:text-emerald-400",
           currentPriceClassName
         )}
       >
@@ -120,10 +122,12 @@ export default function DealCard({
       {/* CTA */}
       <button
         type="button"
+        disabled={buttonDisabled}
         onClick={onSeeDetails}
         className={clsx(
           "w-full inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-xs sm:text-sm",
           "transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/40",
+          "disabled:cursor-not-allowed disabled:opacity-60",
           isBestOption
             ? "bg-primary-600 text-white hover:bg-primary-700 active:bg-primary-800 dark:bg-primary-500 dark:hover:bg-primary-400"
             : "bg-transparent border border-primary-600 text-primary-700 hover:bg-primary-50 dark:border-primary-400 dark:text-primary-300 dark:hover:bg-primary-900/30",
@@ -158,7 +162,7 @@ export default function DealCard({
                     className="list-item text-black/90 dark:text-white/90 leading-normal"
                   >
                     {/* move flex to inner wrapper to preserve bullet */}
-                    <span className="text-xs sm:text-sm">{res}</span>
+                    <span className="text-xs">{res}</span>
                   </li>
                 );
               }
@@ -179,5 +183,4 @@ export default function DealCard({
     </div>
   );
 }
-
 
