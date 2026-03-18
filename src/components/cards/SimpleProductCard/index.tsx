@@ -11,6 +11,8 @@ export interface SimpleProductCardProps {
   title: string;
   /** URL da imagem do produto */
   imgUrl: string;
+  /** Escala aplicada à imagem do produto */
+  imageScale?: number;
   /** Preço do produto */
   price: number;
   /** Descrição do produto */
@@ -51,6 +53,7 @@ export default function SimpleProductCard({
   title,
   description,
   imgUrl,
+  imageScale = 1,
   price,
   bgColor = DEFAULT_BACKGROUND_COLOR,
   className,
@@ -88,6 +91,10 @@ export default function SimpleProductCard({
               fill
               sizes="(max-width: 640px) 160px, 160px"
               src={imgUrl}
+              style={{
+                transform: `scale(${imageScale})`,
+                transformOrigin: "center",
+              }}
             />
           </div>
         </div>

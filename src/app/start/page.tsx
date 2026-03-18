@@ -19,6 +19,7 @@ import {
   refundUserCredit,
   upgradeAuthenticatedUserPlan,
 } from "@/lib/firebase/users";
+import { DEFAULT_PRODUCT_IMAGE_SCALE } from "@/lib/product-image-scale";
 import { landingPageContent, landingPlans } from "@/mocks/piclojaLanding";
 import { type AuthUser, useAuthStore } from "@/stores/auth-store";
 import {
@@ -77,6 +78,7 @@ export default function Start() {
     bgColor: "",
     showPrice: false,
     showLogo: true,
+    imageScale: DEFAULT_PRODUCT_IMAGE_SCALE,
     imageUrl: "",
     userId: authenticatedUser?.id ?? "",
   });
@@ -141,6 +143,7 @@ export default function Start() {
       bgColor: "",
       showPrice: false,
       showLogo: true,
+      imageScale: DEFAULT_PRODUCT_IMAGE_SCALE,
     });
     setGenerationError(null);
     setActiveStep("upload");
@@ -166,6 +169,7 @@ export default function Start() {
       bgColor: "",
       showPrice: false,
       showLogo: true,
+      imageScale: DEFAULT_PRODUCT_IMAGE_SCALE,
     });
     setGenerationError(null);
     setActiveStep("upload");
@@ -514,6 +518,7 @@ export default function Start() {
           description: persistedProduct.description,
           price: persistedProduct.price,
           imageUrl: persistedProduct.imageUrl,
+          imageScale: persistedProduct.imageScale,
           userId: persistedProduct.userId,
           bgColor: persistedProduct.bgColor,
         });
@@ -559,6 +564,7 @@ export default function Start() {
       bgColor: "",
       showPrice: false,
       showLogo: true,
+      imageScale: DEFAULT_PRODUCT_IMAGE_SCALE,
       userId: "",
     });
     useAuthStore.getState().logout();
@@ -647,9 +653,6 @@ export default function Start() {
               <p className="text-xl font-semibold text-foreground sm:text-3xl">
                 Estamos gerando seu produto
               </p>
-              <p className="text-base text-foreground/75 sm:text-2xl">
-                gerando 1 de 1 produto(s)
-              </p>
             </div>
           </section>
         ) : activeStep === "generate" && isProductGenerated ? (
@@ -659,6 +662,7 @@ export default function Start() {
             </h3>
 
             <ProductManageCard
+              allowImageScaleChange
               disabled={isSavingProduct}
               logoAvailable={Boolean(authenticatedUser?.avatarUrl)}
               product={productData}
@@ -679,6 +683,7 @@ export default function Start() {
               title={productData.title}
               description={productData.description}
               bgColor={productData.bgColor}
+              imageScale={productData.imageScale}
               imgUrl={productData.imageUrl}
               price={productData.price}
             />

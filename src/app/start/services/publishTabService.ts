@@ -202,7 +202,10 @@ export class PublishTabService {
       fillStyle: product.bgColor || IMAGE_BACKGROUND,
     });
 
-    drawImageContain(ctx, image, 120, 120, 840, 530);
+    drawImageContain(ctx, image, 120, 120, 840, 530, {
+      clip: true,
+      scaleMultiplier: product.imageScale,
+    });
 
     if (product.showPrice !== false) {
       drawPriceBadge(ctx, formatBRL(product.price));

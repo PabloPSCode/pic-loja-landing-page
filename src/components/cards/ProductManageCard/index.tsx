@@ -6,6 +6,10 @@ import ColorInput from "@/components/inputs/ColorInput";
 import CurrencyInput from "@/components/inputs/CurrencyInput";
 import TextAreaInput from "@/components/inputs/TextAreaInput";
 import TextInput from "@/components/inputs/TextInput";
+import {
+  clampProductImageScale,
+  PRODUCT_IMAGE_SCALE_STEP,
+} from "@/lib/product-image-scale";
 import Switcher from "@/components/miscellaneous/Switcher";
 import clsx from "clsx";
 import Image from "next/image";
@@ -34,6 +38,8 @@ export interface ProductManageCardProps {
   showLogoControl?: boolean;
   /** Define uma variação de layout para contextos menores, como modais */
   layout?: "default" | "stacked";
+  /** Habilita o zoom da imagem pelo scroll do mouse */
+  allowImageScaleChange?: boolean;
 }
 
 const DEFAULT_BACKGROUND_COLOR = "#F7F7F7";
@@ -47,6 +53,7 @@ interface ProductManageCardFormState {
   priceInput: string;
   showPrice: boolean;
   showLogo: boolean;
+  imageScale: number;
   bgTransparent: boolean;
   selectedBgColor: string;
 }
@@ -115,6 +122,7 @@ function resolveFormState(
     priceInput: normalizeInitialPrice(product.price),
     showPrice: resolveInitialShowPrice(product),
     showLogo: resolveInitialShowLogo(product),
+    imageScale: clampProductImageScale(product.imageScale),
     bgTransparent: product.bgColor === DEFAULT_TRANSPARENT_BACKGROUND_COLOR,
     selectedBgColor: resolveInitialSolidBgColor(product.bgColor),
   };
@@ -127,11 +135,13 @@ function buildPayload(
   price: number,
   showPrice: boolean,
   showLogo: boolean,
+  imageScale: number,
   bgColor: string,
 ): ProductManageCardSavePayload {
   return {
     title,
     imageUrl: product.imageUrl,
+    imageScale,
     userId: product.userId,
     description,
     price,
@@ -151,6 +161,7 @@ function buildPayloadFromProduct(product: ProductManageCardProduct) {
     parsePriceInput(formState.priceInput),
     formState.showPrice,
     formState.showLogo,
+    formState.imageScale,
     formState.bgTransparent
       ? DEFAULT_TRANSPARENT_BACKGROUND_COLOR
       : formState.selectedBgColor,
@@ -172,6 +183,7 @@ function isSamePayload(
     left.price === right.price &&
     left.showPrice === right.showPrice &&
     left.showLogo === right.showLogo &&
+    left.imageScale === right.imageScale &&
     left.bgColor === right.bgColor
   );
 }
@@ -186,6 +198,7 @@ export default function ProductManageCard({
   logoAvailable = true,
   showLogoControl = true,
   layout = "default",
+  allowImageScaleChange = false,
 }: ProductManageCardProps) {
   const initialFormState = resolveFormState(product);
   const lastEmittedPayloadRef = useRef<ProductManageCardSavePayload | null>(
@@ -196,6 +209,7 @@ export default function ProductManageCard({
   const [priceInput, setPriceInput] = useState(initialFormState.priceInput);
   const [showPrice, setShowPrice] = useState(initialFormState.showPrice);
   const [showLogo, setShowLogo] = useState(initialFormState.showLogo);
+  const [imageScale, setImageScale] = useState(initialFormState.imageScale);
   const [bgTransparent, setBgTransparent] = useState(
     initialFormState.bgTransparent,
   );
@@ -239,6 +253,9 @@ export default function ProductManageCard({
     setShowLogo((current) =>
       current === nextFormState.showLogo ? current : nextFormState.showLogo,
     );
+    setImageScale((current) =>
+      current === nextFormState.imageScale ? current : nextFormState.imageScale,
+    );
     setBgTransparent((current) =>
       current === nextFormState.bgTransparent
         ? current
@@ -253,6 +270,7 @@ export default function ProductManageCard({
     product.bgColor,
     product.description,
     product.imageUrl,
+    product.imageScale,
     product.price,
     product.showPrice,
     product.showLogo,
@@ -265,6 +283,7 @@ export default function ProductManageCard({
     nextPriceInput = priceInput,
     nextShowPrice = showPrice,
     nextShowLogo = showLogo,
+    nextImageScale = imageScale,
     nextSelectedBgColor = selectedBgColor,
     nextBgTransparent = bgTransparent,
   }: {
@@ -273,6 +292,7 @@ export default function ProductManageCard({
     nextPriceInput?: string;
     nextShowPrice?: boolean;
     nextShowLogo?: boolean;
+    nextImageScale?: number;
     nextSelectedBgColor?: string;
     nextBgTransparent?: boolean;
   }) => {
@@ -291,6 +311,7 @@ export default function ProductManageCard({
       parsePriceInput(nextPriceInput),
       nextShowPrice,
       nextShowLogo,
+      nextImageScale,
       nextBgColor,
     );
 
@@ -328,6 +349,28 @@ export default function ProductManageCard({
     emitChange({ nextShowLogo: checked });
   };
 
+  const handlePreviewWheel = (event: React.WheelEvent<HTMLDivElement>) => {
+    if (!allowImageScaleChange || disabled || !product.imageUrl) {
+      return;
+    }
+
+    event.preventDefault();
+
+    const nextImageScale = clampProductImageScale(
+      imageScale +
+        (event.deltaY < 0
+          ? PRODUCT_IMAGE_SCALE_STEP
+          : -PRODUCT_IMAGE_SCALE_STEP),
+    );
+
+    if (nextImageScale === imageScale) {
+      return;
+    }
+
+    setImageScale(nextImageScale);
+    emitChange({ nextImageScale });
+  };
+
   const handleChangeBgColor = (event: React.ChangeEvent<HTMLInputElement>) => {
     const nextSelectedBgColor = event.target.value;
     setSelectedBgColor(nextSelectedBgColor);
@@ -356,6 +399,7 @@ export default function ProductManageCard({
         parsedPrice,
         showPrice,
         showLogo,
+        imageScale,
         previewBgColor,
       ),
     );
@@ -376,20 +420,41 @@ export default function ProductManageCard({
       >
         <div
           className={clsx(
-            "flex min-h-[168px] items-center justify-center overflow-hidden rounded-lg border border-border-card p-4",
+            "flex flex-col gap-2",
             isStackedLayout && "mx-auto w-full max-w-[280px]",
           )}
-          style={{ backgroundColor: previewBgColor }}
         >
-          {product.imageUrl && (
-            <div className="relative h-full min-h-[136px] w-full">
-              <Image
-                alt={product.title}
-                className="object-contain"
-                fill
-                sizes="(max-width: 1024px) 100vw, 232px"
-                src={product.imageUrl}
-              />
+          <div
+            className={clsx(
+              "flex min-h-[168px] flex-col items-center justify-center overflow-hidden rounded-lg border border-border-card p-4",
+              allowImageScaleChange &&
+                !disabled &&
+                "cursor-zoom-in select-none",
+            )}
+            onWheel={handlePreviewWheel}
+            style={{ backgroundColor: previewBgColor }}
+          >
+            {product.imageUrl && (
+              <div className="relative h-full min-h-[136px] w-full">
+                <Image
+                  alt={product.title}
+                  className="object-contain"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 232px"
+                  src={product.imageUrl}
+                  style={{
+                    transform: `scale(${imageScale})`,
+                    transformOrigin: "center",
+                  }}
+                />
+              </div>
+            )}
+          </div>
+
+          {allowImageScaleChange && (
+            <div className="text-center text-xs text-foreground/70">
+              Role sobre a imagem para ajustar o zoom. Zoom atual:{" "}
+              {Math.round(imageScale * 100)}%
             </div>
           )}
         </div>

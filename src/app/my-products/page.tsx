@@ -139,6 +139,7 @@ export default function MyProducts() {
           title: draft.title,
           description: draft.description,
           price: draft.showPrice === false ? 0 : draft.price,
+          imageScale: draft.imageScale,
           bgColor: draft.bgColor,
         });
 
@@ -255,6 +256,7 @@ export default function MyProducts() {
                 <SimpleProductCard
                   bgColor={product.bgColor}
                   description={product.description}
+                  imageScale={product.imageScale}
                   imgUrl={product.imageUrl}
                   key={product.id}
                   price={product.price}
@@ -275,10 +277,11 @@ export default function MyProducts() {
         description="Atualize dados do seu produto."
         open={Boolean(editingProduct && editingDraft)}
         onClose={handleCloseEditModal}
-        size="xl"
+        size="4xl"
       >
         {editingDraft && (
           <ProductManageCard
+            allowImageScaleChange
             className="p-3 sm:min-w-[50vw] lg:min-w-[40vw]"
             disabled={isUpdatingProduct}
             layout="stacked"

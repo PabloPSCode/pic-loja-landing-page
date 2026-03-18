@@ -26,11 +26,17 @@ const PRODUCTS_COLLECTION = "products";
 
 function buildProductUpdatePayload(
   data: IUpdateProductDTO,
-): Partial<Pick<FirestoreProductDocument, "title" | "description" | "price" | "bgColor">> {
+): Partial<
+  Pick<
+    FirestoreProductDocument,
+    "title" | "description" | "price" | "imageScale" | "bgColor"
+  >
+> {
   return {
     ...(data.title !== undefined ? { title: data.title } : {}),
     ...(data.description !== undefined ? { description: data.description } : {}),
     ...(data.price !== undefined ? { price: data.price } : {}),
+    ...(data.imageScale !== undefined ? { imageScale: data.imageScale } : {}),
     ...(data.bgColor !== undefined ? { bgColor: data.bgColor } : {}),
   };
 }
@@ -45,6 +51,7 @@ export async function createProduct(
     description: data.description,
     price: data.price,
     imageUrl: data.imageUrl,
+    imageScale: data.imageScale,
     userId: data.userId,
     bgColor: data.bgColor,
     createdAt: now,

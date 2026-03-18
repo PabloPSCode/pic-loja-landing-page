@@ -23,6 +23,11 @@ export interface DrawTextOptions {
   font: string;
 }
 
+export interface DrawImageContainOptions {
+  clip?: boolean;
+  scaleMultiplier?: number;
+}
+
 export function createCanvas(width: number, height: number) {
   const canvas = document.createElement("canvas");
   canvas.width = width;
@@ -108,15 +113,29 @@ export function drawImageContain(
   y: number,
   width: number,
   height: number,
+  options?: DrawImageContainOptions,
 ) {
   const source = image as HTMLImageElement;
-  const scale = Math.min(width / source.width, height / source.height);
+  const scale =
+    Math.min(width / source.width, height / source.height) *
+    (options?.scaleMultiplier ?? 1);
   const drawWidth = source.width * scale;
   const drawHeight = source.height * scale;
   const drawX = x + (width - drawWidth) / 2;
   const drawY = y + (height - drawHeight) / 2;
 
+  if (options?.clip) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x, y, width, height);
+    ctx.clip();
+  }
+
   ctx.drawImage(source, drawX, drawY, drawWidth, drawHeight);
+
+  if (options?.clip) {
+    ctx.restore();
+  }
 }
 
 export function wrapTextLines(

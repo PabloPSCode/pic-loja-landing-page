@@ -2,6 +2,7 @@ import type { IProductDocumentDTO } from "@/dtos/product.dto";
 import type { IUserDocumentDTO } from "@/dtos/user.dto";
 import { Timestamp } from "firebase/firestore";
 
+import { clampProductImageScale } from "../product-image-scale";
 import { normalizeUserCredits } from "./user-credits";
 
 export interface FirestoreUserDocument {
@@ -24,6 +25,7 @@ export interface FirestoreProductDocument {
   description: string;
   price: number;
   imageUrl: string;
+  imageScale?: number;
   userId: string;
   bgColor: string;
   createdAt: Date | Timestamp;
@@ -85,6 +87,7 @@ export function mapProductDocument(
     description: data.description,
     price: data.price,
     imageUrl: data.imageUrl,
+    imageScale: clampProductImageScale(data.imageScale),
     userId: data.userId,
     bgColor: data.bgColor,
     createdAt: toDate(data.createdAt) ?? new Date(),
