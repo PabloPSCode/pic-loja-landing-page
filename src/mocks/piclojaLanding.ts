@@ -71,6 +71,7 @@ export const landingImages = {
 export const landingPageContent = {
   about: {
     button: "Testar gratuitamente",
+    buttonAcess: "Acessar meu painel",
     description:
       "PicLoja é uma ferramenta web que transforma uma foto em um produto pronto para divulgar de forma simples, rápida e profissional.",
     extra:

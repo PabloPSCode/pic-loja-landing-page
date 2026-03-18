@@ -23,6 +23,7 @@ import {
   landingSteps,
   landingTestimonials,
 } from "@/mocks/piclojaLanding";
+import { useAuthStore } from "@/stores/auth-store";
 import {
   CameraIcon,
   DeviceMobileIcon,
@@ -49,6 +50,8 @@ export default function Home() {
 
   const navigate = useRouter();
 
+  const user = useAuthStore((state) => state.user);
+
   return (
     <div className="min-h-screen bg-background text-foreground" id="topo">
       <main className="overflow-x-hidden">
@@ -73,7 +76,11 @@ export default function Home() {
               <div className="mt-8">
                 <Button
                   className="!rounded-md !bg-foreground !px-6 !py-4 !text-white hover:!bg-tertiary-800"
-                  label={landingPageContent.hero.cta}
+                  label={
+                    user?.email
+                      ? landingPageContent.about.buttonAcess
+                      : landingPageContent.about.button
+                  }
                   type="button"
                   onClick={() => navigate.push("/start")}
                 />
@@ -159,8 +166,12 @@ export default function Home() {
                     content={landingPageContent.about.extra}
                   />
                   <Button
-                    className="mt-8 !rounded-md !bg-primary-600 !px-6 !py-4 !text-foreground hover:!bg-primary-700"
-                    label={landingPageContent.about.button}
+                    className="mt-8 !rounded-md !bg-primary-600 font-bold !px-6 !py-4 !text-foreground hover:!bg-primary-700"
+                    label={
+                      user?.email
+                        ? landingPageContent.about.buttonAcess
+                        : landingPageContent.about.button
+                    }
                     type="button"
                     onClick={() => navigate.push("/start")}
                   />
