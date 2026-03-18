@@ -37,7 +37,7 @@ export default function ShareControllerCard({
   onSave,
   onShare,
   saveLabel = "Salvar imagem",
-  shareLabel = "Compartilhar imagem",
+  shareLabel = "Compartilhar produto",
   saveDisabled = false,
   shareDisabled = false,
   className,

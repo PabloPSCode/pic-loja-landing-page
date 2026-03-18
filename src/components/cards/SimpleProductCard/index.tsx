@@ -62,7 +62,7 @@ export default function SimpleProductCard({
   onSave,
   onShare,
   saveLabel = "Salvar imagem",
-  shareLabel = "Compartilhar imagem",
+  shareLabel = "Compartilhar produto",
   saveDisabled = false,
   shareDisabled = false,
   onDelete,

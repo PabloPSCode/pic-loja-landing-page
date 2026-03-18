@@ -108,18 +108,14 @@ export default function Home() {
 
             <ZoomContainer className="w-full" once>
               <div className="relative mx-auto w-full max-w-[40rem]">
-                <div className="absolute -left-6 top-14 h-48 w-48 rounded-full bg-secondary-400/55 blur-3xl" />
-                <div className="absolute right-4 top-6 h-56 w-56 rounded-full bg-white/25 blur-3xl" />
-                <div className="relative overflow-hidden rounded-[2rem] border border-white/35 bg-white/15 p-4 shadow-[0_30px_60px_rgba(0,0,0,0.16)] backdrop-blur-sm">
-                  <Image
-                    alt={landingImages.hero.alt}
-                    className="h-auto w-full rounded-[1.5rem]"
-                    height={520}
-                    priority
-                    src={landingImages.hero.src}
-                    width={720}
-                  />
-                </div>
+                <Image
+                  alt={landingImages.hero.alt}
+                  className="h-auto w-full  rounded-md"
+                  height={520}
+                  priority
+                  src={landingImages.hero.src}
+                  width={720}
+                />
               </div>
             </ZoomContainer>
           </div>
@@ -141,7 +137,7 @@ export default function Home() {
               />
             </FadeContainer>
 
-            <div className="mt-14 grid w-full items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
+            <div className="mt-14 flex flex-col-reverse w-full items-center gap-12 lg:grid lg:grid-cols-[1.05fr_0.95fr]">
               <ZoomContainer className="w-full" once>
                 <div className="relative mx-auto max-w-[40rem] rounded-[2rem] border border-foreground/6 bg-white p-4 shadow-[0_22px_50px_rgba(0,0,0,0.08)]">
                   <div className="absolute inset-x-10 bottom-2 h-8 rounded-full bg-tertiary-300/35 blur-2xl" />
@@ -166,7 +162,7 @@ export default function Home() {
                     content={landingPageContent.about.extra}
                   />
                   <Button
-                    className="mt-8 !rounded-md !bg-primary-600 font-bold !px-6 !py-4 !text-foreground hover:!bg-primary-700"
+                    className="mt-8 !rounded-md !bg-primary-600 font-bold !px-6 !py-4 !text-foreground hover:!bg-primary-700 mx-auto"
                     label={
                       user?.email
                         ? landingPageContent.about.buttonAcess

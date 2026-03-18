@@ -44,7 +44,7 @@ export type LandingPlan = {
 export const landingImages = {
   hero: {
     alt: "Mulher em loja usando celular para organizar produtos",
-    src: "/imgs/picloja-hero-real.jpg",
+    src: "/imgs/img_transform.png",
   },
   logo: {
     alt: "Símbolo da PicLoja",
@@ -60,7 +60,7 @@ export const landingImages = {
   },
   showcase: {
     alt: "Profissional usando celular e notebook para preparar um produto digital",
-    src: "/imgs/picloja-showcase-real.jpg",
+    src: "/imgs/dashboard.png",
   },
   workflow: {
     alt: "Profissional trabalhando no notebook durante a criação dos produtos",
