@@ -6,6 +6,14 @@ import clsx from "clsx";
 
 type Size = "sm" | "md" | "lg";
 
+function normalizeHref(href: string) {
+  if (href.startsWith("#") && href.length > 1) {
+    return `/${href}`;
+  }
+
+  return href;
+}
+
 export interface LandingHeaderRootProps
   extends React.HTMLAttributes<HTMLElement> {
   /** Tamanho do header */
@@ -126,22 +134,26 @@ const Nav: React.FC<{ className?: string; children?: React.ReactNode }> & {
   </ul>
 );
 
-Nav.Item = ({ href = "#", target, onClick, children, active }) => (
-  <li>
-    <a
-      href={href}
-      target={target}
-      onClick={onClick}
-      className={clsx(
-        "text-sm font-medium  whitespace-nowrap text-left",
-        "text-foreground/90 hover:text-foreground",
-        active && "text-primary"
-      )}
-    >
-      {children}
-    </a>
-  </li>
-);
+Nav.Item = ({ href = "#", target, onClick, children, active }) => {
+  const resolvedHref = normalizeHref(href);
+
+  return (
+    <li>
+      <a
+        href={resolvedHref}
+        target={target}
+        onClick={onClick}
+        className={clsx(
+          "text-sm font-medium  whitespace-nowrap text-left",
+          "text-foreground/90 hover:text-foreground",
+          active && "text-primary"
+        )}
+      >
+        {children}
+      </a>
+    </li>
+  );
+};
 Nav.Item.displayName = "LandingHeaderNavItem";
 
 /** CTA (qualquer nó) */

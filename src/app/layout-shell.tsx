@@ -14,6 +14,8 @@ import {
 } from "@/mocks/piclojaLanding";
 import { useAuthStore } from "@/stores/auth-store";
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function LayoutShell({
@@ -23,7 +25,9 @@ export default function LayoutShell({
 }>) {
   const authenticatedUser = useAuthStore((state) => state.user);
   const syncAuthenticatedUser = useAuthStore((state) => state.syncUser);
+  const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const isHomePage = pathname === "/";
 
   const closeMobileMenu = () => {
     setIsMobileMenuOpen(false);
@@ -38,7 +42,9 @@ export default function LayoutShell({
       }
 
       try {
-        const userProfile = await getAuthenticatedUserProfile(authenticatedUser.id);
+        const userProfile = await getAuthenticatedUserProfile(
+          authenticatedUser.id,
+        );
 
         if (isCancelled) {
           return;
@@ -51,11 +57,16 @@ export default function LayoutShell({
           activePlan: userProfile.activePlan,
           availableCredits: userProfile.availableCredits,
           consumedCredits: userProfile.consumedCredits,
-          ...(userProfile.avatarUrl ? { avatarUrl: userProfile.avatarUrl } : {}),
+          ...(userProfile.avatarUrl
+            ? { avatarUrl: userProfile.avatarUrl }
+            : {}),
         });
       } catch (error) {
         if (!isCancelled) {
-          console.error("Nao foi possivel atualizar o usuario autenticado:", error);
+          console.error(
+            "Nao foi possivel atualizar o usuario autenticado:",
+            error,
+          );
         }
       }
     };
@@ -67,6 +78,12 @@ export default function LayoutShell({
     };
   }, [authenticatedUser?.id, syncAuthenticatedUser]);
 
+  useEffect(() => {
+    if (!isHomePage) {
+      setIsMobileMenuOpen(false);
+    }
+  }, [isHomePage]);
+
   return (
     <>
       <LandingHeader.Root
@@ -75,60 +92,68 @@ export default function LayoutShell({
         sticky={false}
       >
         <LandingHeader.Left className="gap-4">
-          <LandingHeader.Logo
-            alt={landingImages.logoText.alt}
-            className="!h-8 sm:!h-9 lg:!h-10"
-            src={landingImages.logoText.src}
-          />
+          <Link href="/">
+            <LandingHeader.Logo
+              alt={landingImages.logoText.alt}
+              className="!h-8 sm:!h-9 lg:!h-10"
+              src={landingImages.logoText.src}
+            />
+          </Link>
         </LandingHeader.Left>
 
-        <LandingHeader.Center>
-          <LandingHeader.Nav className="justify-center gap-5 lg:gap-8">
+        {isHomePage && (
+          <LandingHeader.Center>
+            <LandingHeader.Nav className="justify-center gap-5 lg:gap-8">
+              {landingNavItems.map((item) => (
+                <LandingHeader.Nav.Item
+                  href={item.href}
+                  key={item.href}
+                  onClick={closeMobileMenu}
+                >
+                  {item.label}
+                </LandingHeader.Nav.Item>
+              ))}
+            </LandingHeader.Nav>
+          </LandingHeader.Center>
+        )}
+
+        <LandingHeader.Right className="gap-3">
+          {isHomePage && (
+            <LandingHeader.MobileMenuToggle
+              className="text-foreground"
+              onToggle={
+                ((open: boolean) => {
+                  setIsMobileMenuOpen(open);
+                }) as never
+              }
+              open={isMobileMenuOpen}
+              type="button"
+            />
+          )}
+        </LandingHeader.Right>
+
+        {isHomePage && (
+          <LandingHeader.MobileMenuPanel
+            cta={
+              <LandingHeader.CTA
+                className="w-full !justify-center !rounded-lg !bg-foreground !py-3 !text-white"
+                label={landingPageContent.header.cta}
+                type="button"
+              />
+            }
+            open={isMobileMenuOpen}
+          >
             {landingNavItems.map((item) => (
               <LandingHeader.Nav.Item
                 href={item.href}
-                key={item.href}
+                key={`mobile-${item.href}`}
                 onClick={closeMobileMenu}
               >
                 {item.label}
               </LandingHeader.Nav.Item>
             ))}
-          </LandingHeader.Nav>
-        </LandingHeader.Center>
-
-        <LandingHeader.Right className="gap-3">
-          <LandingHeader.MobileMenuToggle
-            className="text-foreground"
-            onToggle={
-              ((open: boolean) => {
-                setIsMobileMenuOpen(open);
-              }) as never
-            }
-            open={isMobileMenuOpen}
-            type="button"
-          />
-        </LandingHeader.Right>
-
-        <LandingHeader.MobileMenuPanel
-          cta={
-            <LandingHeader.CTA
-              className="w-full !justify-center !rounded-lg !bg-foreground !py-3 !text-white"
-              label={landingPageContent.header.cta}
-              type="button"
-            />
-          }
-          open={isMobileMenuOpen}
-        >
-          {landingNavItems.map((item) => (
-            <LandingHeader.Nav.Item
-              href={item.href}
-              key={`mobile-${item.href}`}
-              onClick={closeMobileMenu}
-            >
-              {item.label}
-            </LandingHeader.Nav.Item>
-          ))}
-        </LandingHeader.MobileMenuPanel>
+          </LandingHeader.MobileMenuPanel>
+        )}
       </LandingHeader.Root>
 
       {children}
@@ -161,7 +186,10 @@ export default function LayoutShell({
                       {item.label}
                     </a>
                   ) : (
-                    <span className="block text-sm text-foreground/75" key={item.label}>
+                    <span
+                      className="block text-sm text-foreground/75"
+                      key={item.label}
+                    >
                       {item.label}
                     </span>
                   ),
@@ -170,11 +198,13 @@ export default function LayoutShell({
             </div>
           </Footer.Column>
 
-          <Footer.Column
-            className="items-start"
-            items={footerNavigationItems}
-            title={landingPageContent.footer.navigationTitle}
-          />
+          {isHomePage && (
+            <Footer.Column
+              className="items-start"
+              items={footerNavigationItems}
+              title={landingPageContent.footer.navigationTitle}
+            />
+          )}
 
           <Footer.Column
             className="items-start"

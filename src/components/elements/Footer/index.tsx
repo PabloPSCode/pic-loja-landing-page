@@ -6,6 +6,14 @@ import SocialRibbon, {
   type SocialRibbonProps,
 } from "./components/SocialRibbon";
 
+function normalizeHref(href: string) {
+  if (href.startsWith("#") && href.length > 1) {
+    return `/${href}`;
+  }
+
+  return href;
+}
+
 /**
  * Footer – composto por três áreas empilhadas (flex-col):
  * 1) Top (grid responsivo 2–6 colunas) – links, contatos, etc.
@@ -121,7 +129,7 @@ const Column: React.FC<ColumnProps> = ({
             <li key={idx}>
               {it.href ? (
                 <a
-                  href={it.href}
+                  href={normalizeHref(it.href)}
                   target={it.target}
                   className="text-foreground/80 text-xs sm:text-sm hover:text-foreground underline-offset-4 hover:underline"
                 >
