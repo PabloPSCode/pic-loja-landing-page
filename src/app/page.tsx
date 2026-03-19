@@ -107,7 +107,7 @@ export default function Home() {
             </RevealContainer>
 
    
-            <ZoomContainer className="w-full" once delay={6}>
+            <ZoomContainer className="w-full" once delay={4}>
               <div className="relative mx-auto w-full max-w-[40rem]">
                 <Image
                   alt={landingImages.heroImage2.alt}
@@ -120,7 +120,7 @@ export default function Home() {
               </div>
             </ZoomContainer>
             
-            <ZoomContainer className="w-full" once delay={4}>
+            <ZoomContainer className="w-full" once delay={6}>
               <div className="relative mx-auto w-full max-w-[40rem]">
                 <Image
                   alt={landingImages.heroImage1.alt}
