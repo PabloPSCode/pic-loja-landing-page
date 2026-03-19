@@ -63,6 +63,7 @@ export default function Start() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [isProductGenerated, setIsProductGenerated] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
+  const [generationNotice, setGenerationNotice] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [isUpgradingPlan, setIsUpgradingPlan] = useState<PaidUserPlan | null>(
@@ -148,6 +149,7 @@ export default function Start() {
       imageScale: DEFAULT_PRODUCT_IMAGE_SCALE,
     });
     setGenerationError(null);
+    setGenerationNotice(null);
     setActiveStep("upload");
     setShouldRemoveBackground(true);
     setIsGenerating(false);
@@ -175,6 +177,7 @@ export default function Start() {
       imageScale: DEFAULT_PRODUCT_IMAGE_SCALE,
     });
     setGenerationError(null);
+    setGenerationNotice(null);
     setActiveStep("upload");
     setShouldRemoveBackground(true);
     setIsGenerating(false);
@@ -184,6 +187,7 @@ export default function Start() {
 
   const handleOpenPricingModal = useCallback(() => {
     setGenerationError(null);
+    setGenerationNotice(null);
     setShowPricingModal(true);
   }, []);
 
@@ -285,6 +289,7 @@ export default function Start() {
         );
 
         setGenerationError(null);
+        setGenerationNotice(null);
         setActiveStep("generate");
         setIsGenerating(true);
         setIsProductGenerated(false);
@@ -301,7 +306,25 @@ export default function Start() {
             return requestProductCopyFromUploadedImage(uploadedFile);
           }
 
-          await removeBg(uploadedFile);
+          try {
+            await removeBg(uploadedFile);
+          } catch (removeBgError) {
+            if (originalPreviewUrl) {
+              setProductData((prev) => ({
+                ...prev,
+                imageUrl: originalPreviewUrl,
+              }));
+            }
+
+            setGenerationNotice(
+              "Nao foi possivel remover o fundo da imagem. O produto foi gerado com a foto original.",
+            );
+            console.warn(
+              "Nao foi possivel remover o fundo da imagem. Seguindo com a foto original.",
+              removeBgError,
+            );
+          }
+
           return requestProductCopyFromUploadedImage(uploadedFile);
         };
 
@@ -374,6 +397,7 @@ export default function Start() {
             ? error.message
             : "Nao foi possivel gerar o produto a partir da imagem enviada.",
         );
+        setGenerationNotice(null);
         setIsGenerating(false);
         setIsProductGenerated(false);
         setActiveStep("upload");
@@ -574,12 +598,13 @@ export default function Start() {
     setActiveStep("upload");
     setUploadedFile(null);
     setPreviewUrl(null);
-    setIsGenerating(false);
-    setIsProductGenerated(false);
-    setIsProductSaved(false);
-    setProductData({
-      title: "",
-      description: "",
+      setIsGenerating(false);
+      setIsProductGenerated(false);
+      setIsProductSaved(false);
+      setGenerationNotice(null);
+      setProductData({
+        title: "",
+        description: "",
       price: 0,
       imageUrl: "",
       bgColor: "",
@@ -621,6 +646,11 @@ export default function Start() {
         {generationError && (
           <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
             {generationError}
+          </div>
+        )}
+        {generationNotice && !generationError && (
+          <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            {generationNotice}
           </div>
         )}
 
