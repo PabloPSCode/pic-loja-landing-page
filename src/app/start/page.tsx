@@ -8,6 +8,7 @@ import ShareControllerCard, {
 } from "@/components/cards/ShareControllerCard";
 import SimpleProductCard from "@/components/cards/SimpleProductCard";
 import UserCard from "@/components/cards/UserCard";
+import Switcher from "@/components/miscellaneous/Switcher";
 import StepIndicator from "@/components/miscellaneous/StepIndicator";
 import GenericModal from "@/components/modals/GenericModal";
 import { createProduct } from "@/lib/firebase/products";
@@ -58,6 +59,7 @@ export default function Start() {
   const [activeStep, setActiveStep] = useState<ActiveStep>("upload");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [shouldRemoveBackground, setShouldRemoveBackground] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isProductGenerated, setIsProductGenerated] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
@@ -147,6 +149,7 @@ export default function Start() {
     });
     setGenerationError(null);
     setActiveStep("upload");
+    setShouldRemoveBackground(true);
     setIsGenerating(false);
     setIsProductGenerated(false);
     setIsProductSaved(false);
@@ -173,6 +176,7 @@ export default function Start() {
     });
     setGenerationError(null);
     setActiveStep("upload");
+    setShouldRemoveBackground(true);
     setIsGenerating(false);
     setIsProductGenerated(false);
     setIsProductSaved(false);
@@ -266,6 +270,7 @@ export default function Start() {
       if (!uploadedFile || !userId) return;
 
       let shouldRefundCredit = false;
+      const originalPreviewUrl = previewUrl;
 
       if (generationTimeoutRef.current) {
         clearTimeout(generationTimeoutRef.current);
@@ -284,10 +289,24 @@ export default function Start() {
         setIsGenerating(true);
         setIsProductGenerated(false);
 
+        const prepareProductImage = async () => {
+          if (!shouldRemoveBackground) {
+            if (originalPreviewUrl) {
+              setProductData((prev) => ({
+                ...prev,
+                imageUrl: originalPreviewUrl,
+              }));
+            }
+
+            return requestProductCopyFromUploadedImage(uploadedFile);
+          }
+
+          await removeBg(uploadedFile);
+          return requestProductCopyFromUploadedImage(uploadedFile);
+        };
+
         const [analysis] = await Promise.all([
-          removeBg(uploadedFile).then(() =>
-            requestProductCopyFromUploadedImage(uploadedFile),
-          ),
+          prepareProductImage(),
           new Promise((resolve) => {
             generationTimeoutRef.current = setTimeout(() => {
               generationTimeoutRef.current = null;
@@ -363,6 +382,8 @@ export default function Start() {
     [
       authenticatedUser?.id,
       handleOpenPricingModal,
+      previewUrl,
+      shouldRemoveBackground,
       uploadedFile,
       setAuthenticatedUserCredits,
     ],
@@ -618,18 +639,35 @@ export default function Start() {
                     selectedText: "1 imagem selecionada",
                     title: "Imagem selecionada:",
                     actionSlot: (
-                      <button
-                        className={clsx(
-                          "inline-flex items-center gap-2 rounded-md px-4 py-2",
-                          "bg-primary-500 text-sm font-semibold text-foreground",
-                          "transition-colors hover:bg-primary-400",
-                        )}
-                        onClick={handleGenerateProduct}
-                        type="button"
-                      >
-                        Gerar produto
-                        <MagicWandIcon size={16} weight="fill" />
-                      </button>
+                      <div className="flex w-full flex-col gap-3">
+                        <div className="rounded-lg border border-foreground/10 bg-background p-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="text-sm font-medium text-foreground">
+                              Remover fundo
+                            </span>
+                            <Switcher
+                              checked={shouldRemoveBackground}
+                              onChange={setShouldRemoveBackground}
+                            />
+                          </div>
+                          <p className="mt-2 text-xs text-foreground/70">
+                            Desative para gerar o produto usando a foto original.
+                          </p>
+                        </div>
+
+                        <button
+                          className={clsx(
+                            "inline-flex items-center gap-2 rounded-md px-4 py-2",
+                            "bg-primary-500 text-sm font-semibold text-foreground",
+                            "transition-colors hover:bg-primary-400",
+                          )}
+                          onClick={handleGenerateProduct}
+                          type="button"
+                        >
+                          Gerar produto
+                          <MagicWandIcon size={16} weight="fill" />
+                        </button>
+                      </div>
                     ),
                   }
                 : null
