@@ -42,9 +42,17 @@ export type LandingPlan = {
 };
 
 export const landingImages = {
-  hero: {
+  heroImage1: {
     alt: "Mulher em loja usando celular para organizar produtos",
     src: "/imgs/img_transform.png",
+  },
+  heroImage2: {
+    alt: "Mulher em loja usando celular para organizar produtos",
+    src: "/imgs/img_transform2.png",
+  },
+  heroImage3: {
+    alt: "Mulher em loja usando celular para organizar produtos",
+    src: "/imgs/img_transform3.png",
   },
   logo: {
     alt: "Símbolo da PicLoja",

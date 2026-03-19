@@ -106,14 +106,28 @@ export default function Home() {
               </div>
             </RevealContainer>
 
-            <ZoomContainer className="w-full" once>
+   
+            <ZoomContainer className="w-full" once delay={6}>
               <div className="relative mx-auto w-full max-w-[40rem]">
                 <Image
-                  alt={landingImages.hero.alt}
+                  alt={landingImages.heroImage2.alt}
                   className="h-auto w-full  rounded-md"
                   height={520}
                   priority
-                  src={landingImages.hero.src}
+                  src={landingImages.heroImage2.src}
+                  width={720}
+                />
+              </div>
+            </ZoomContainer>
+            
+            <ZoomContainer className="w-full" once delay={4}>
+              <div className="relative mx-auto w-full max-w-[40rem]">
+                <Image
+                  alt={landingImages.heroImage1.alt}
+                  className="h-auto w-full  rounded-md"
+                  height={520}
+                  priority
+                  src={landingImages.heroImage1.src}
                   width={720}
                 />
               </div>
