@@ -2,7 +2,11 @@
 
 import IconButton from "@/components/buttons/IconButton";
 import { formatBRL } from "@/utils/format";
-import { DownloadSimpleIcon, ShareNetworkIcon } from "@phosphor-icons/react";
+import {
+  CircleNotchIcon,
+  DownloadSimpleIcon,
+  ShareNetworkIcon,
+} from "@phosphor-icons/react";
 import clsx from "clsx";
 import Image from "next/image";
 
@@ -33,6 +37,8 @@ export interface SimpleProductCardProps {
   saveLabel?: string;
   /** Texto do botão de compartilhar */
   shareLabel?: string;
+  /** Exibe estado de carregamento no botão de compartilhar */
+  shareLoading?: boolean;
   /** Desabilita o botão de salvar */
   saveDisabled?: boolean;
   /** Desabilita o botão de compartilhar */
@@ -63,6 +69,7 @@ export default function SimpleProductCard({
   onShare,
   saveLabel = "Salvar imagem",
   shareLabel = "Compartilhar produto",
+  shareLoading = false,
   saveDisabled = false,
   shareDisabled = false,
   onDelete,
@@ -154,11 +161,15 @@ export default function SimpleProductCard({
                   "bg-primary-500 text-sm font-semibold text-foreground transition-colors hover:bg-primary-400",
                   "disabled:cursor-not-allowed disabled:opacity-60",
                 )}
-                disabled={shareDisabled}
+                disabled={shareDisabled || shareLoading}
                 onClick={onShare}
                 type="button"
               >
-                <ShareNetworkIcon size={18} weight="bold" />
+                {shareLoading ? (
+                  <CircleNotchIcon className="animate-spin" size={18} weight="bold" />
+                ) : (
+                  <ShareNetworkIcon size={18} weight="bold" />
+                )}
                 {shareLabel}
               </button>
             )}

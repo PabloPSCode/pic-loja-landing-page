@@ -71,6 +71,8 @@ export default function Start() {
   );
   const [isProductSaved, setIsProductSaved] = useState(false);
   const [isSavingProduct, setIsSavingProduct] = useState(false);
+  const [isSharingGeneratedProduct, setIsSharingGeneratedProduct] =
+    useState(false);
   const generationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
@@ -601,6 +603,7 @@ export default function Start() {
       setIsGenerating(false);
       setIsProductGenerated(false);
       setIsProductSaved(false);
+      setIsSharingGeneratedProduct(false);
       setGenerationNotice(null);
       setProductData({
         title: "",
@@ -617,14 +620,22 @@ export default function Start() {
   };
 
   const handleShareGeneratedProduct = useCallback(async () => {
+    if (isSharingGeneratedProduct) {
+      return;
+    }
+
+    setIsSharingGeneratedProduct(true);
+
     try {
       await PublishTabService.shareProductImage(productData, {
         avatarUrl: authenticatedUser?.avatarUrl,
       });
     } catch (error) {
       console.error("Erro ao compartilhar imagem do produto:", error);
+    } finally {
+      setIsSharingGeneratedProduct(false);
     }
-  }, [authenticatedUser?.avatarUrl, productData]);
+  }, [authenticatedUser?.avatarUrl, isSharingGeneratedProduct, productData]);
 
   return (
     <main className="min-h-[60vh] w-full bg-white/50 px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
@@ -757,6 +768,13 @@ export default function Start() {
             />
             <div className="w-full mt-4">
               <ShareControllerCard
+                shareDisabled={isSharingGeneratedProduct}
+                shareLabel={
+                  isSharingGeneratedProduct
+                    ? "Compartilhando..."
+                    : "Compartilhar produto"
+                }
+                shareLoading={isSharingGeneratedProduct}
                 title="Compartilhe seu produto"
                 onSave={handleDownloadGeneratedProduct}
                 onShare={handleShareGeneratedProduct}

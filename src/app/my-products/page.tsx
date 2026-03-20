@@ -35,6 +35,7 @@ export default function MyProducts() {
   const [deletingProduct, setDeletingProduct] = useState<StoredProduct | null>(null);
   const [isUpdatingProduct, setIsUpdatingProduct] = useState(false);
   const [isDeletingProduct, setIsDeletingProduct] = useState(false);
+  const [sharingProductId, setSharingProductId] = useState<string | null>(null);
 
   useEffect(() => {
     let isCancelled = false;
@@ -99,15 +100,25 @@ export default function MyProducts() {
 
   const handleShare = useCallback(
     async (product: StoredProduct) => {
+      if (sharingProductId === product.id) {
+        return;
+      }
+
+      setSharingProductId(product.id);
+
       try {
         await PublishTabService.shareProductImage(product, {
           avatarUrl: user?.avatarUrl,
         });
       } catch (error) {
         console.error("Erro ao compartilhar imagem do produto:", error);
+      } finally {
+        setSharingProductId((currentSharingProductId) =>
+          currentSharingProductId === product.id ? null : currentSharingProductId,
+        );
       }
     },
-    [user?.avatarUrl],
+    [sharingProductId, user?.avatarUrl],
   );
 
   const handleOpenEditModal = useCallback((product: StoredProduct) => {
@@ -263,6 +274,13 @@ export default function MyProducts() {
                   title={product.title}
                   onSave={() => void handleSave(product)}
                   onShare={() => void handleShare(product)}
+                  shareDisabled={sharingProductId === product.id}
+                  shareLabel={
+                    sharingProductId === product.id
+                      ? "Compartilhando..."
+                      : "Compartilhar produto"
+                  }
+                  shareLoading={sharingProductId === product.id}
                   onDelete={() => handleOpenDeleteModal(product)}
                   onEdit={() => handleOpenEditModal(product)}
                 />

@@ -1,7 +1,11 @@
 'use client';
 
 import clsx from "clsx";
-import { DownloadSimpleIcon, ShareNetworkIcon } from "@phosphor-icons/react";
+import {
+  CircleNotchIcon,
+  DownloadSimpleIcon,
+  ShareNetworkIcon,
+} from "@phosphor-icons/react";
 import { ICreateProductDTO } from "@/dtos/product.dto";
 
 export interface IProductData extends ICreateProductDTO {
@@ -20,6 +24,8 @@ export interface ShareControllerCardProps {
   saveLabel?: string;
   /** Texto do botão de compartilhar */
   shareLabel?: string;
+  /** Exibe estado de carregamento no botão de compartilhar */
+  shareLoading?: boolean;
   /** Desabilita o botão de salvar */
   saveDisabled?: boolean;
   /** Desabilita o botão de compartilhar */
@@ -38,6 +44,7 @@ export default function ShareControllerCard({
   onShare,
   saveLabel = "Salvar imagem",
   shareLabel = "Compartilhar produto",
+  shareLoading = false,
   saveDisabled = false,
   shareDisabled = false,
   className,
@@ -76,11 +83,15 @@ export default function ShareControllerCard({
               "bg-primary-500 text-sm font-semibold text-foreground transition-colors hover:bg-primary-400",
               "disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:min-w-[176px]",
             )}
-            disabled={shareDisabled}
+            disabled={shareDisabled || shareLoading}
             onClick={onShare}
             type="button"
           >
-            <ShareNetworkIcon size={18} weight="bold" />
+            {shareLoading ? (
+              <CircleNotchIcon className="animate-spin" size={18} weight="bold" />
+            ) : (
+              <ShareNetworkIcon size={18} weight="bold" />
+            )}
             {shareLabel}
           </button>
         </div>
