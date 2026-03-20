@@ -516,6 +516,11 @@ export default function Start() {
         return;
       }
 
+      if ((authenticatedUser.availableCredits ?? 0) > 0) {
+        setShowPricingModal(false);
+        return;
+      }
+
       setGenerationError(null);
 
       try {

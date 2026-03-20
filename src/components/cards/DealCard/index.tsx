@@ -15,6 +15,7 @@ export interface DealCardProps {
   subtitle?: string;
   currentPrice: string;
   oldPrice?: string;
+  showPrice?: boolean;
   resources: Resource[];
   buttonDisabled?: boolean;
   buttonTitle?: string;
@@ -36,6 +37,7 @@ export default function DealCard({
   subtitle,
   currentPrice,
   oldPrice,
+  showPrice = true,
   resources,
   buttonDisabled = false,
   onSeeDetails,
@@ -98,7 +100,7 @@ export default function DealCard({
       )}
 
       {/* Prices */}
-      {oldPrice && (
+      {showPrice && oldPrice && (
         <span
           className={clsx(
             "text-xs sm:text-sm line-through text-center text-black/60 dark:text-white/60",
@@ -109,15 +111,17 @@ export default function DealCard({
         </span>
       )}
 
-      <span
-        className={clsx(
-          "mt-1 mb-3 sm:mb-4 text-lg sm:text-xl font-bold text-center text-emerald-600 dark:text-emerald-400",
-          currentPriceClassName
-        )}
-      >
-        {oldPrice ? "por " : ""}
-        {currentPrice}
-      </span>
+      {showPrice && (
+        <span
+          className={clsx(
+            "mt-1 mb-3 sm:mb-4 text-lg sm:text-xl font-bold text-center text-emerald-600 dark:text-emerald-400",
+            currentPriceClassName
+          )}
+        >
+          {oldPrice ? "por " : ""}
+          {currentPrice}
+        </span>
+      )}
 
       {/* CTA */}
       <button
@@ -183,4 +187,3 @@ export default function DealCard({
     </div>
   );
 }
-

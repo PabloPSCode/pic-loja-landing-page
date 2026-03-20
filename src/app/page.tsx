@@ -55,6 +55,8 @@ export default function Home() {
   const user = useAuthStore((state) => state.user);
   const logUserIn = useAuthStore((state) => state.login);
   const { checkoutPlan, startPlanCheckout } = useStripe();
+  const hasAvailableCredits = (user?.availableCredits ?? 0) > 0;
+  const shouldShowPlanPricing = !user || !hasAvailableCredits;
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingCheckoutPlan, setPendingCheckoutPlan] =
     useState<PaidUserPlan | null>(null);
@@ -75,6 +77,11 @@ export default function Home() {
 
       setCheckoutError(null);
 
+      if ((authenticatedUser.availableCredits ?? 0) > 0) {
+        navigate.push("/start");
+        return;
+      }
+
       try {
         await startPlanCheckout(selectedPlan, {
           user: authenticatedUser,
@@ -89,7 +96,7 @@ export default function Home() {
         );
       }
     },
-    [startPlanCheckout, user],
+    [navigate, startPlanCheckout, user],
   );
 
   const handleAuthenticate = useCallback(
@@ -395,12 +402,15 @@ export default function Home() {
                           : "!border-foreground/20 !text-foreground hover:!bg-black/5"
                       }
                       buttonDisabled={
-                        Boolean(checkoutPlan) || user?.activePlan === plan.plan
+                        Boolean(checkoutPlan) ||
+                        (!hasAvailableCredits && user?.activePlan === plan.plan)
                       }
                       buttonTitle={
                         checkoutPlan === plan.plan
                           ? "Redirecionando..."
-                          : user?.activePlan === plan.plan
+                          : hasAvailableCredits
+                            ? "Acessar painel"
+                            : user?.activePlan === plan.plan
                             ? "Plano atual"
                             : plan.buttonTitle
                       }
@@ -414,6 +424,7 @@ export default function Home() {
                       discountPercentage={plan.discountPercentage}
                       isBestOption={plan.isBestOption}
                       oldPrice={plan.oldPrice}
+                      showPrice={shouldShowPlanPricing}
                       onSeeDetails={() => void handlePlanSelection(plan.plan)}
                       resources={plan.resources}
                       subtitle={plan.subtitle}
