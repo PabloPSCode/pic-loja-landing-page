@@ -1,6 +1,5 @@
 "use client";
 
-import { PublishTabService } from "@/app/start/services/publishTabService";
 import { IProductData } from "@/components/cards/ShareControllerCard";
 import ProductManageCard from "@/components/cards/ProductManageCard";
 import SimpleProductCard from "@/components/cards/SimpleProductCard";
@@ -8,6 +7,7 @@ import UserCard from "@/components/cards/UserCard";
 import DestructiveModal from "@/components/modals/DestructiveModal";
 import GenericModal from "@/components/modals/GenericModal";
 import { getProductsByUserId, updateProduct, deleteProduct } from "@/lib/firebase/products";
+import { PublishTabService } from "@/services/publishTabService";
 import type { IProductDocumentDTO } from "@/dtos/product.dto";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCallback, useEffect, useState } from "react";

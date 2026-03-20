@@ -8,6 +8,7 @@ import ShareControllerCard, {
 } from "@/components/cards/ShareControllerCard";
 import SimpleProductCard from "@/components/cards/SimpleProductCard";
 import UserCard from "@/components/cards/UserCard";
+import { useStripe } from "@/hooks/useStripe";
 import Switcher from "@/components/miscellaneous/Switcher";
 import StepIndicator from "@/components/miscellaneous/StepIndicator";
 import GenericModal from "@/components/modals/GenericModal";
@@ -18,10 +19,10 @@ import {
   FREE_USER_CREDITS,
   consumeUserCredit,
   refundUserCredit,
-  upgradeAuthenticatedUserPlan,
 } from "@/lib/firebase/users";
 import { DEFAULT_PRODUCT_IMAGE_SCALE } from "@/lib/product-image-scale";
 import { landingPageContent, landingPlans } from "@/mocks/piclojaLanding";
+import { PublishTabService } from "@/services/publishTabService";
 import { type AuthUser, useAuthStore } from "@/stores/auth-store";
 import {
   CameraIcon,
@@ -39,7 +40,6 @@ import {
   useState,
 } from "react";
 import LoginModal from "./components/LoginModal";
-import { PublishTabService } from "./services/publishTabService";
 
 const TOTAL_STEPS = 3;
 
@@ -53,8 +53,8 @@ interface ImageObjectAnalysisResponse {
 
 export default function Start() {
   const authenticatedUser = useAuthStore((state) => state.user);
-  const syncAuthenticatedUser = useAuthStore((state) => state.syncUser);
   const setAuthenticatedUserCredits = useAuthStore((state) => state.setCredits);
+  const { checkoutPlan, startPlanCheckout } = useStripe();
 
   const [activeStep, setActiveStep] = useState<ActiveStep>("upload");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -66,9 +66,8 @@ export default function Start() {
   const [generationNotice, setGenerationNotice] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showPricingModal, setShowPricingModal] = useState(false);
-  const [isUpgradingPlan, setIsUpgradingPlan] = useState<PaidUserPlan | null>(
-    null,
-  );
+  const [pendingCheckoutPlan, setPendingCheckoutPlan] =
+    useState<PaidUserPlan | null>(null);
   const [isProductSaved, setIsProductSaved] = useState(false);
   const [isSavingProduct, setIsSavingProduct] = useState(false);
   const [isSharingGeneratedProduct, setIsSharingGeneratedProduct] =
@@ -194,12 +193,12 @@ export default function Start() {
   }, []);
 
   const handleClosePricingModal = useCallback(() => {
-    if (isUpgradingPlan) {
+    if (checkoutPlan) {
       return;
     }
 
     setShowPricingModal(false);
-  }, [isUpgradingPlan]);
+  }, [checkoutPlan]);
 
   const removeBg = async (file: File) => {
     const formData = new FormData();
@@ -465,6 +464,34 @@ export default function Start() {
       });
       setShowAuthModal(false);
 
+      const nextAuthenticatedUser: AuthUser = {
+        id,
+        name,
+        email,
+        activePlan,
+        availableCredits,
+        consumedCredits,
+        ...(avatarUrl ? { avatarUrl } : {}),
+      };
+
+      if (pendingCheckoutPlan) {
+        const selectedPlan = pendingCheckoutPlan;
+        setPendingCheckoutPlan(null);
+        void startPlanCheckout(selectedPlan, {
+          user: nextAuthenticatedUser,
+          successPath: "/start?checkout=success",
+          cancelPath: "/start",
+        }).catch((error) => {
+          setGenerationError(
+            error instanceof Error
+              ? error.message
+              : "Nao foi possivel iniciar o checkout do Stripe.",
+          );
+          setShowPricingModal(true);
+        });
+        return;
+      }
+
       if (availableCredits < 1) {
         handleOpenPricingModal();
         return;
@@ -472,60 +499,52 @@ export default function Start() {
 
       startProductGeneration(id);
     },
-    [handleOpenPricingModal, logUserIn, startProductGeneration],
+    [
+      handleOpenPricingModal,
+      logUserIn,
+      pendingCheckoutPlan,
+      startPlanCheckout,
+      startProductGeneration,
+    ],
   );
 
-  const handleUpgradePlan = useCallback(
+  const handleStartPlanCheckout = useCallback(
     async (plan: PaidUserPlan) => {
       if (!authenticatedUser) {
-        setShowPricingModal(false);
+        setPendingCheckoutPlan(plan);
         setShowAuthModal(true);
         return;
       }
 
-      setIsUpgradingPlan(plan);
       setGenerationError(null);
 
       try {
-        const updatedUser = await upgradeAuthenticatedUserPlan(plan);
-        const nextAuthenticatedUser: AuthUser = {
-          id: updatedUser.id,
-          name: updatedUser.name,
-          email: updatedUser.email,
-          activePlan: updatedUser.activePlan,
-          availableCredits: updatedUser.availableCredits,
-          consumedCredits: updatedUser.consumedCredits,
-          ...(updatedUser.avatarUrl
-            ? { avatarUrl: updatedUser.avatarUrl }
-            : {}),
-        };
-
-        syncAuthenticatedUser(nextAuthenticatedUser);
-        setShowPricingModal(false);
-
-        if (uploadedFile && updatedUser.availableCredits > 0) {
-          await startProductGeneration(updatedUser.id);
-        }
+        await startPlanCheckout(plan, {
+          user: authenticatedUser,
+          successPath: "/start?checkout=success",
+          cancelPath: "/start",
+        });
       } catch (error) {
         setGenerationError(
           error instanceof Error
             ? error.message
-            : "Nao foi possivel ativar o plano selecionado.",
+            : "Nao foi possivel iniciar o checkout do plano selecionado.",
         );
-      } finally {
-        setIsUpgradingPlan(null);
       }
     },
-    [
-      authenticatedUser,
-      startProductGeneration,
-      syncAuthenticatedUser,
-      uploadedFile,
-    ],
+    [authenticatedUser, startPlanCheckout],
   );
 
   const handleToggleAuthModal = () => {
-    setShowAuthModal((prev) => !prev);
+    setShowAuthModal((prev) => {
+      const nextOpenState = !prev;
+
+      if (!nextOpenState) {
+        setPendingCheckoutPlan(null);
+      }
+
+      return nextOpenState;
+    });
   };
 
   const handleSaveProduct = useCallback(
@@ -800,7 +819,7 @@ export default function Start() {
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {landingPlans.map((plan) => {
             const isCurrentPlan = authenticatedUser?.activePlan === plan.plan;
-            const isSubmittingPlan = isUpgradingPlan === plan.plan;
+            const isSubmittingPlan = checkoutPlan === plan.plan;
 
             return (
               <div className="-mt-4" key={plan.title}>
@@ -810,10 +829,10 @@ export default function Start() {
                       ? "!bg-foreground !text-white hover:!bg-tertiary-800"
                       : "!border-foreground/20 !text-foreground hover:!bg-black/5"
                   }
-                  buttonDisabled={Boolean(isUpgradingPlan) || isCurrentPlan}
+                  buttonDisabled={Boolean(checkoutPlan) || isCurrentPlan}
                   buttonTitle={
                     isSubmittingPlan
-                      ? "Ativando..."
+                      ? "Redirecionando..."
                       : isCurrentPlan
                         ? "Plano atual"
                         : plan.buttonTitle
@@ -824,7 +843,7 @@ export default function Start() {
                   discountPercentage={plan.discountPercentage}
                   isBestOption={plan.isBestOption}
                   oldPrice={plan.oldPrice}
-                  onSeeDetails={() => void handleUpgradePlan(plan.plan)}
+                  onSeeDetails={() => void handleStartPlanCheckout(plan.plan)}
                   resources={plan.resources}
                   subtitle={plan.subtitle}
                   title={plan.title}

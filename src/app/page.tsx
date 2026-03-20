@@ -1,5 +1,6 @@
 "use client";
 
+import LoginModal from "@/app/start/components/LoginModal";
 import FadeContainer from "@/components/animations-and-loading/FadeContainer";
 import RevealContainer from "@/components/animations-and-loading/RevealContainer";
 import ZoomContainer from "@/components/animations-and-loading/ZoomContainer";
@@ -9,6 +10,8 @@ import InfoCard from "@/components/cards/InfoCard";
 import TestimonialCard from "@/components/cards/TestimonialCard";
 import { HeroSection } from "@/components/elements/HeroSection";
 import { Section } from "@/components/elements/Section";
+import { useStripe } from "@/hooks/useStripe";
+import type { PaidUserPlan } from "@/lib/firebase/user-credits";
 import { Accordeon } from "@/components/miscellaneous/Accordeon";
 import Paragraph from "@/components/typography/Paragraph";
 import Subtitle from "@/components/typography/Subtitle";
@@ -23,7 +26,7 @@ import {
   landingSteps,
   landingTestimonials,
 } from "@/mocks/piclojaLanding";
-import { useAuthStore } from "@/stores/auth-store";
+import { type AuthUser, useAuthStore } from "@/stores/auth-store";
 import {
   CameraIcon,
   DeviceMobileIcon,
@@ -35,6 +38,7 @@ import {
 } from "@phosphor-icons/react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useCallback, useState } from "react";
 
 export default function Home() {
   const featureIcons = {
@@ -46,11 +50,64 @@ export default function Home() {
     pencil: PencilSimpleLineIcon,
   } as const;
 
-  const handleSeePlanDetails = () => undefined;
-
   const navigate = useRouter();
 
   const user = useAuthStore((state) => state.user);
+  const logUserIn = useAuthStore((state) => state.login);
+  const { checkoutPlan, startPlanCheckout } = useStripe();
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingCheckoutPlan, setPendingCheckoutPlan] =
+    useState<PaidUserPlan | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+  const handleCloseAuthModal = useCallback(() => {
+    setShowAuthModal(false);
+    setPendingCheckoutPlan(null);
+  }, []);
+
+  const handlePlanSelection = useCallback(
+    async (selectedPlan: PaidUserPlan, authenticatedUser = user) => {
+      if (!authenticatedUser) {
+        setPendingCheckoutPlan(selectedPlan);
+        setShowAuthModal(true);
+        return;
+      }
+
+      setCheckoutError(null);
+
+      try {
+        await startPlanCheckout(selectedPlan, {
+          user: authenticatedUser,
+          successPath: "/start?checkout=success",
+          cancelPath: "/#planos",
+        });
+      } catch (error) {
+        setCheckoutError(
+          error instanceof Error
+            ? error.message
+            : "Nao foi possivel iniciar o checkout do Stripe.",
+        );
+      }
+    },
+    [startPlanCheckout, user],
+  );
+
+  const handleAuthenticate = useCallback(
+    async (authenticatedUser: AuthUser) => {
+      logUserIn(authenticatedUser);
+      setShowAuthModal(false);
+
+      if (!pendingCheckoutPlan) {
+        return;
+      }
+
+      const selectedPlan = pendingCheckoutPlan;
+      setPendingCheckoutPlan(null);
+
+      await handlePlanSelection(selectedPlan, authenticatedUser);
+    },
+    [handlePlanSelection, logUserIn, pendingCheckoutPlan],
+  );
 
   return (
     <div className="min-h-screen bg-background text-foreground" id="topo">
@@ -323,6 +380,11 @@ export default function Home() {
             </FadeContainer>
 
             <FadeContainer className="mt-12 w-full" once>
+              {checkoutError && (
+                <div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {checkoutError}
+                </div>
+              )}
               <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                 {landingPlans.map((plan) => (
                   <div className="h-full" key={plan.title}>
@@ -332,7 +394,16 @@ export default function Home() {
                           ? "!bg-foreground !text-white hover:!bg-tertiary-800"
                           : "!border-foreground/20 !text-foreground hover:!bg-black/5"
                       }
-                      buttonTitle={plan.buttonTitle}
+                      buttonDisabled={
+                        Boolean(checkoutPlan) || user?.activePlan === plan.plan
+                      }
+                      buttonTitle={
+                        checkoutPlan === plan.plan
+                          ? "Redirecionando..."
+                          : user?.activePlan === plan.plan
+                            ? "Plano atual"
+                            : plan.buttonTitle
+                      }
                       className={
                         plan.isBestOption
                           ? "h-full border-primary-300 shadow-[0_18px_40px_rgba(124,255,58,0.16)]"
@@ -343,7 +414,7 @@ export default function Home() {
                       discountPercentage={plan.discountPercentage}
                       isBestOption={plan.isBestOption}
                       oldPrice={plan.oldPrice}
-                      onSeeDetails={handleSeePlanDetails}
+                      onSeeDetails={() => void handlePlanSelection(plan.plan)}
                       resources={plan.resources}
                       subtitle={plan.subtitle}
                       title={plan.title}
@@ -438,6 +509,11 @@ export default function Home() {
           </a>
         </div>
       </main>
+      <LoginModal
+        open={showAuthModal}
+        onClose={handleCloseAuthModal}
+        onAuthenticate={handleAuthenticate}
+      />
     </div>
   );
 }

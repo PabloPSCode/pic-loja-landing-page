@@ -1,7 +1,6 @@
 "use client";
 
 import type { IProductData } from "@/components/cards/ShareControllerCard";
-import { formatBRL } from "@/utils/format";
 import {
   canvasToBlob,
   createCanvas,
@@ -13,6 +12,7 @@ import {
   loadImage,
   wrapTextLines,
 } from "@/lib/canva";
+import { formatBRL } from "@/utils/format";
 
 const CANVAS_WIDTH = 1080;
 const PAGE_BACKGROUND = "#ffffff";
@@ -138,7 +138,8 @@ async function drawAvatarLogo(
     return;
   }
 
-  const avatarX = IMAGE_FRAME_X + IMAGE_FRAME_WIDTH - AVATAR_SIZE - CORNER_PADDING;
+  const avatarX =
+    IMAGE_FRAME_X + IMAGE_FRAME_WIDTH - AVATAR_SIZE - CORNER_PADDING;
   const avatarY = IMAGE_FRAME_Y + CORNER_PADDING;
   const avatarRadius = AVATAR_SIZE / 2;
 
@@ -171,7 +172,13 @@ async function drawAvatarLogo(
   ctx.closePath();
   ctx.clip();
 
-  ctx.drawImage(avatarImage, avatarX + 6, avatarY + 6, AVATAR_SIZE - 12, AVATAR_SIZE - 12);
+  ctx.drawImage(
+    avatarImage,
+    avatarX + 6,
+    avatarY + 6,
+    AVATAR_SIZE - 12,
+    AVATAR_SIZE - 12,
+  );
   ctx.restore();
 }
 
@@ -255,7 +262,9 @@ export class PublishTabService {
     options?: ProductRenderOptions,
   ) {
     const blob = await PublishTabService.generateProductBlob(product, options);
-    const filename = `${sanitizeFilename(product.title || "produto") || "produto"}.png`;
+    const filename = `${
+      sanitizeFilename(product.title || "produto") || "produto"
+    }.png`;
     downloadBlob(blob, filename);
   }
 
@@ -264,7 +273,9 @@ export class PublishTabService {
     options?: ProductRenderOptions,
   ) {
     const blob = await PublishTabService.generateProductBlob(product, options);
-    const filename = `${sanitizeFilename(product.title || "produto") || "produto"}.png`;
+    const filename = `${
+      sanitizeFilename(product.title || "produto") || "produto"
+    }.png`;
     const file = new File([blob], filename, { type: "image/png" });
 
     if (

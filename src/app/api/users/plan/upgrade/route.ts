@@ -1,19 +1,10 @@
 import type { IUserDocumentDTO } from "@/dtos/user.dto";
-import { adminAuth, adminDb } from "@/lib/firebase/admin";
+import { adminAuth } from "@/lib/firebase/admin";
+import { upgradeUserPlanById } from "@/lib/firebase/admin-users";
 import {
-  type FirestoreUserDocument,
-  mapUserDocument,
-} from "@/lib/firebase/firestore-mappers";
-import {
-  applyPlanPurchaseOrUpgrade,
-  getCurrentCreditMonthKey,
   isPaidUserPlan,
-  type PaidUserPlan,
-  normalizeUserCredits,
 } from "@/lib/firebase/user-credits";
 import { NextRequest, NextResponse } from "next/server";
-
-const USERS_COLLECTION = "users";
 
 interface SerializedUserDocument
   extends Omit<IUserDocumentDTO, "createdAt" | "updatedAt" | "deletedAt"> {
@@ -41,46 +32,6 @@ function serializeUserDocument(user: IUserDocumentDTO): SerializedUserDocument {
   };
 }
 
-async function updateUserPlan(
-  userId: string,
-  plan: PaidUserPlan,
-): Promise<IUserDocumentDTO> {
-  const userRef = adminDb.collection(USERS_COLLECTION).doc(userId);
-
-  return adminDb.runTransaction(async (transaction) => {
-    const userSnapshot = await transaction.get(userRef);
-
-    if (!userSnapshot.exists) {
-      throw new Error("Perfil do usuario nao foi encontrado no Firestore.");
-    }
-
-    const currentUser = userSnapshot.data() as FirestoreUserDocument;
-    const updatedAt = new Date();
-    const nextCredits = applyPlanPurchaseOrUpgrade(
-      normalizeUserCredits(currentUser),
-      plan,
-      getCurrentCreditMonthKey(updatedAt),
-    );
-
-    transaction.update(userRef, {
-      activePlan: nextCredits.activePlan,
-      availableCredits: nextCredits.availableCredits,
-      consumedCredits: nextCredits.consumedCredits,
-      lastPlanCreditMonth: nextCredits.lastPlanCreditMonth,
-      updatedAt,
-    });
-
-    return mapUserDocument(userSnapshot.id, {
-      ...currentUser,
-      activePlan: nextCredits.activePlan,
-      availableCredits: nextCredits.availableCredits,
-      consumedCredits: nextCredits.consumedCredits,
-      lastPlanCreditMonth: nextCredits.lastPlanCreditMonth,
-      updatedAt,
-    });
-  });
-}
-
 export async function POST(request: NextRequest) {
   try {
     const idToken = getBearerToken(request);
@@ -104,7 +55,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const user = await updateUserPlan(decodedToken.uid, payload.plan);
+    const user = await upgradeUserPlanById(decodedToken.uid, payload.plan);
 
     return NextResponse.json({
       user: serializeUserDocument(user),
