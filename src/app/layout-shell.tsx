@@ -159,9 +159,9 @@ export default function LayoutShell({
       {children}
 
       <Footer.Root bordered={false} className="bg-background" id="contato">
-        <Footer.Top className="gap-8 !py-14" columns={4}>
-          <Footer.Column className="items-start">
-            <div className="flex flex-col items-start gap-5">
+        <Footer.Top className="gap-8 !py-14" columns={3}>
+          <Footer.Column className="sm:items-start">
+            <div className="flex flex-col items-center gap-5 text-center sm:items-start sm:text-left">
               <div className="flex items-center gap-3">
                 <Image
                   alt={landingImages.logoText.alt}
@@ -175,52 +175,56 @@ export default function LayoutShell({
                 className="max-w-xs text-sm leading-7 text-foreground/70 sm:text-base font-normal"
                 content={landingPageContent.footer.description as never}
               />
+              <div className="flex items-center gap-1 mt-4">
+                <Image
+                  width={40}
+                  height={40}
+                  src="/imgs/logo_pls.png"
+                  alt="Logo da PLS Sistemas"
+                  className="object-contain h-10 sm:h-12 rounded-lg"
+                />
+                <span className="text-xs sm:text-sm font-medium text-foreground">
+                  Sistemas
+                </span>
+              </div>
               <div className="space-y-2">
-                {footerContactItems.map((item) =>
-                  item.href ? (
-                    <a
-                      className="block text-sm text-foreground/75 transition hover:text-foreground hover:underline"
-                      href={item.href}
-                      key={item.label}
-                    >
-                      {item.label}
-                    </a>
-                  ) : (
-                    <span
-                      className="block text-sm text-foreground/75"
-                      key={item.label}
-                    >
-                      {item.label}
-                    </span>
-                  ),
-                )}
+                {footerContactItems.map((item) => (
+                  <span
+                    className="block text-sm text-foreground/75"
+                    key={item.label}
+                  >
+                    {item.label}
+                  </span>
+                ))}
               </div>
             </div>
           </Footer.Column>
 
           {isHomePage && (
             <Footer.Column
-              className="items-start"
+              className="sm:items-start"
               items={footerNavigationItems}
               title={landingPageContent.footer.navigationTitle}
             />
           )}
 
           <Footer.Column
-            className="items-start"
+            className="sm:items-start"
             items={footerLegalItems}
             title={landingPageContent.footer.legalTitle}
           />
         </Footer.Top>
 
         <Footer.Bottom bordered className="bg-white/45">
-          <div className="flex w-full flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
+          <div className="flex w-full flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left text-xs">
             <span>
+              {new Date().getFullYear()} &copy; -
               Desenvolvido por{" "}
               <a
                 href="https://www.plssistemas.com.br"
                 rel="noopener noreferrer"
                 target="_blank"
+                className="text-xs"
               >
                 PLS Sistemas
               </a>

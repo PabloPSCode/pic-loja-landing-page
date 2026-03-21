@@ -102,7 +102,7 @@ export const landingPageContent = {
   footer: {
     copyright:
       "2026, desenvolvido para a apresentação da PicLoja com foco em conversão.",
-    description: "Transforme uma foto em produto e venda pelo WhatsApp.",
+    description: "Uma foto entra, um produto sai",
     legalTitle: "Termos e Políticas",
     navigationTitle: "Navegue",
     sealDescription:
@@ -312,14 +312,19 @@ export const landingFaq = [
   },
   {
     answer:
-      "Na maioria dos cenários, em poucos segundos ou minutos você já consegue sair da foto e chegar a um produto pronto para divulgar.",
+      "Em poucos segundos você já consegue sair da foto e chegar a um produto pronto para divulgar.",
     question: "Quanto tempo leva para gerar um produto?",
   },
   {
     answer:
-      "Sim. Depois de publicar, basta compartilhar o link com seus clientes no WhatsApp, Instagram ou no canal que fizer mais sentido.",
+      "Sim. Depois do produto gerado, você pode compartilhá-lo no WhatsApp e nas redes sociais ou fazer download caso deseje.",
     question: "Posso compartilhar no WhatsApp e nas redes sociais?",
   },
+  {
+    answer:
+      "O sistema de créditos é mensal e varia conforme o plano escolhido. Cada crédito corresponde a uma foto transformada em produto. Os créditos não utilizados no mês são acumulativos. Você nunca perde créditos, mesmo que não use todos em um mês. Se precisar de mais créditos, pode adquirir pacotes adicionais ou fazer upgrade para um plano superior.",
+    question: "Como funciona o sistema de créditos?",
+  }
 ];
 
 export const footerNavigationItems = [
@@ -332,8 +337,6 @@ export const footerNavigationItems = [
 
 export const footerContactItems = [
   { label: "João Monlevade - MG" },
-  { href: "tel:+5531912341234", label: "31 91234-1234" },
-  { href: "mailto:contato@picloja.com.br", label: "contato@picloja.com.br" },
 ];
 
 export const footerLegalItems = [

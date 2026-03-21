@@ -88,7 +88,7 @@ export const Default: Story = {
 
         {/* Bottom */}
         <Footer.Bottom>
-          <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center">
+          <div className="flex flex-col items-center justify-between gap-2 text-center sm:flex-row sm:items-center sm:text-left">
             <p>
               © {new Date().getFullYear()} Minha Empresa — CNPJ:
               00.000.000/0001-00
@@ -164,7 +164,7 @@ export const TwoColumnsAndCustomSocial: Story = {
 
         {/* Social – children customizado no lugar do SocialRibbon */}
         <Footer.SocialRow>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:text-left">
             <span className="text-sm font-medium">Siga-nos:</span>
             <div className="flex items-center gap-3">
               <InstagramLogoIcon className="h-5 w-5" />
@@ -178,7 +178,7 @@ export const TwoColumnsAndCustomSocial: Story = {
 
         {/* Bottom – livre */}
         <Footer.Bottom>
-          <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-col items-center justify-between gap-2 text-center sm:flex-row sm:text-left">
             <span>© {new Date().getFullYear()} Produto XYZ</span>
             <span className="text-foreground/70">
               Todos os direitos reservados.
@@ -197,4 +197,3 @@ export const TwoColumnsAndCustomSocial: Story = {
     },
   },
 };
-

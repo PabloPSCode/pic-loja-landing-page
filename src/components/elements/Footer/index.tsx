@@ -89,7 +89,7 @@ const Top: React.FC<TopGridProps> = ({
       className={clsx(
         "mx-auto w-full max-w-7xl px-4 sm:px-6",
         "py-8 sm:py-10",
-        "grid grid-cols-1 gap-6 sm:grid-cols-2",
+        "grid grid-cols-1 gap-6 text-center sm:grid-cols-2 sm:text-left",
         bordered && "border-b border-foreground/50",
         colClass,
         className
@@ -117,9 +117,15 @@ const Column: React.FC<ColumnProps> = ({
   ...rest
 }) => {
   return (
-    <div {...rest} className={clsx("flex flex-col items-center sm:items-start", className)}>
+    <div
+      {...rest}
+      className={clsx(
+        "flex flex-col items-center text-center sm:items-start sm:text-left",
+        className
+      )}
+    >
       {title && (
-        <h4 className="mb-3 text-xs sm:text-sm font-semibold tracking-wide text-foreground">
+        <h4 className="mb-3 text-center text-xs font-semibold tracking-wide text-foreground sm:text-left sm:text-sm">
           {title}
         </h4>
       )}
@@ -181,9 +187,9 @@ const SocialRow: React.FC<SocialRowProps> = ({
         className
       )}
     >
-      <div className="mx-auto flex w-full max-w-7xl  justify-between gap-4 px-4 py-4 sm:px-6 flex-col items-center sm:flex-row">
+      <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-4 px-4 py-4 text-center sm:flex-row sm:px-6 sm:text-left">
         {/* Conteúdo à esquerda (opcional) passado como children */}
-        <div className="min-w-0 flex-1">
+        <div className="flex w-full min-w-0 flex-1 justify-center text-center sm:justify-start sm:text-left">
           {children ? (
             children
           ) : items ? (
@@ -224,7 +230,7 @@ const Bottom: React.FC<BottomProps> = ({
         className
       )}
     >
-      <div className="mx-auto w-full max-w-7xl px-4 py-4 text-sm sm:px-6 flex flex-col items-center sm:flex-row">
+      <div className="mx-auto flex w-full max-w-7xl flex-col items-center px-4 py-4 text-center text-sm sm:flex-row sm:px-6 sm:text-left">
         {children}
       </div>
     </div>

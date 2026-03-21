@@ -47,13 +47,13 @@ export default function SocialRibbon({
   title,
 }: SocialRibbonProps) {
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col items-center text-center sm:items-start sm:text-left">
       {title && (
-        <h4 className="mb-3 text-xs sm:text-sm font-semibold tracking-wide text-foreground">
+        <h4 className="mb-3 text-center text-xs font-semibold tracking-wide text-foreground sm:text-left sm:text-sm">
           {title}
         </h4>
       )}
-      <ul className="flex gap-3 items-center">
+      <ul className="flex items-center justify-center gap-3 sm:justify-start">
         {items.map((item, index) => (
           <li key={index}>
             <a href={item.href} className="flex items-center">
@@ -107,5 +107,4 @@ export default function SocialRibbon({
     </div>
   );
 }
-
 
