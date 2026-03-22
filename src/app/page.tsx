@@ -437,7 +437,7 @@ export default function Home() {
           </Section>
         </div>
 
-        <div id="depoimentos">
+        {/* <div id="depoimentos">
           <Section
             sectionClassName="px-6 py-16 sm:px-8 lg:px-10 lg:py-24"
             size="middle"
@@ -472,7 +472,7 @@ export default function Home() {
               </div>
             </FadeContainer>
           </Section>
-        </div>
+        </div> */}
 
         <div id="duvidas">
           <Section

@@ -143,7 +143,6 @@ export const landingNavItems: LandingNavItem[] = [
   { href: "#o-que-e", label: "O que é a PicLoja?" },
   { href: "#recursos", label: "Recursos" },
   { href: "#planos", label: "Pacotes" },
-  { href: "#depoimentos", label: "Casos de sucesso" },
   { href: "#duvidas", label: "Dúvidas" },
 ];
 
