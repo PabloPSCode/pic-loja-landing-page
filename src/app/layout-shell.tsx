@@ -102,8 +102,8 @@ export default function LayoutShell({
         </LandingHeader.Left>
 
         {isHomePage && (
-          <LandingHeader.Center>
-            <LandingHeader.Nav className="justify-center gap-5 lg:gap-8">
+          <LandingHeader.Center className="w-full">
+            <LandingHeader.Nav className="w-full justify-end gap-5 lg:gap-8">
               {landingNavItems.map((item) => (
                 <LandingHeader.Nav.Item
                   href={item.href}

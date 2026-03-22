@@ -148,15 +148,15 @@ export const landingNavItems: LandingNavItem[] = [
 
 export const landingHighlights: LandingHighlight[] = [
   {
-    label: "Gere produtos em segundos",
+    label: "Gere produtos em segundos.",
     value: "Transformação em segundos",
   },
   {
-    label: "Fluxo simples e objetivo",
+    label: "Fluxo simples e objetivo.",
     value: "1 foto vira 1 produto",
   },
   {
-    label: "Saída pronta para uso",
+    label: "Saída pronta para uso.",
     value: "WhatsApp e redes sociais",
   },
 ];
@@ -164,13 +164,13 @@ export const landingHighlights: LandingHighlight[] = [
 export const landingSteps: LandingStep[] = [
   {
     description:
-      "Envie a foto que deseja transformar e escolha o tipo de resultado que quer gerar.",
+      "Envie a foto que deseja transformar.",
     number: "1",
     title: "Selecione sua foto",
   },
   {
     description:
-      "A PicLoja organiza o visual, recorta, melhora a apresentação e monta a estrutura do produto automaticamente.",
+      "A PicLoja organiza o visual, remove o fundo da imagem, gera o título e descrição do produto automaticamente.",
     number: "2",
     title: "Gere o produto com IA",
   },

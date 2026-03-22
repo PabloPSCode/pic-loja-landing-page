@@ -7,15 +7,14 @@ import ZoomContainer from "@/components/animations-and-loading/ZoomContainer";
 import Button from "@/components/buttons/Button";
 import DealCard from "@/components/cards/DealCard";
 import InfoCard from "@/components/cards/InfoCard";
-import TestimonialCard from "@/components/cards/TestimonialCard";
 import { HeroSection } from "@/components/elements/HeroSection";
 import { Section } from "@/components/elements/Section";
-import { useStripe } from "@/hooks/useStripe";
-import type { PaidUserPlan } from "@/lib/firebase/user-credits";
 import { Accordeon } from "@/components/miscellaneous/Accordeon";
 import Paragraph from "@/components/typography/Paragraph";
 import Subtitle from "@/components/typography/Subtitle";
 import Title from "@/components/typography/Title";
+import { useStripe } from "@/hooks/useStripe";
+import type { PaidUserPlan } from "@/lib/firebase/user-credits";
 import {
   landingFaq,
   landingFeatures,
@@ -24,7 +23,6 @@ import {
   landingPageContent,
   landingPlans,
   landingSteps,
-  landingTestimonials,
 } from "@/mocks/piclojaLanding";
 import { type AuthUser, useAuthStore } from "@/stores/auth-store";
 import {
@@ -126,20 +124,20 @@ export default function Home() {
           <div className="relative mx-auto grid w-full max-w-7xl items-center gap-12 px-6 pb-16 pt-10 sm:px-8 lg:grid-cols-[1fr_0.92fr] lg:px-10 lg:pb-24">
             <RevealContainer className="flex flex-col items-start" once>
               <Title
-                className="mt-6 max-w-3xl text-4xl leading-[1.04] tracking-[-0.035em] text-foreground sm:text-5xl lg:text-7xl font-bold"
+                className="mt-6 max-w-3xl !text-4xl leading-[1.04] tracking-[-0.035em] text-foreground sm:!text-5xl lg:!text-7xl font-bold"
                 content={landingPageContent.hero.title}
                 element="h1"
               />
 
               <Paragraph
-                className="mt-6 max-w-xl text-base leading-8 text-foreground/80 sm:text-lg md:text-xl font-normal"
+                className="mt-6 max-w-xl !text-base leading-8 text-foreground/80 !sm:text-lg !md:text-xl font-normal"
                 content={landingPageContent.hero.description}
               />
               <div className="bg-image-[url('/imgs/picloja-hero-real.jpg')] w-full h-full" />
 
               <div className="mt-8">
                 <Button
-                  className="!rounded-md !bg-foreground !px-6 !py-4 !text-white hover:!bg-tertiary-800"
+                  className="!rounded-md !bg-foreground !px-6 !py-4 !text-white hover:!bg-tertiary-800 font-semibold"
                   label={
                     user?.email
                       ? landingPageContent.about.buttonAcess
@@ -149,29 +147,32 @@ export default function Home() {
                   onClick={() => navigate.push("/start")}
                 />
               </div>
-
-              <div className="mt-10 grid w-full gap-4 sm:grid-cols-3">
-                {landingHighlights.map((highlight) => (
-                  <div
-                    className="rounded-2xl border border-foreground/8 bg-white/70 p-5 shadow-[0_12px_30px_rgba(0,0,0,0.08)]"
-                    key={highlight.label}
-                  >
-                    <Subtitle
-                      className="text-sm leading-6 text-foreground sm:text-base font-semibold"
-                      content={highlight.value}
-                      element="h2"
-                    />
-                    <Paragraph
-                      className="mt-2 text-sm leading-6 text-foreground/65 font-normal"
-                      content={highlight.label}
-                    />
-                  </div>
-                ))}
-              </div>
             </RevealContainer>
 
-   
-            <ZoomContainer className="w-full" once delay={4}>
+            <div className="w-full flex flex-col gap-12">
+              <div className="relative mx-auto w-full max-w-[40rem]">
+                <Image
+                  alt={landingImages.heroImage2.alt}
+                  className="h-auto w-full  rounded-md"
+                  height={340}
+                  priority
+                  src={landingImages.heroImage2.src}
+                  width={340}
+                />
+              </div>
+              <div className="relative mx-auto w-full max-w-[32rem]">
+                <Image
+                  alt={landingImages.heroImage1.alt}
+                  className="h-auto w-full  rounded-md"
+                  height={520}
+                  priority
+                  src={landingImages.heroImage1.src}
+                  width={720}
+                />
+              </div>
+            </div>
+
+            {/* <ZoomContainer className="w-full" once delay={4}>
               <div className="relative mx-auto w-full max-w-[40rem]">
                 <Image
                   alt={landingImages.heroImage2.alt}
@@ -183,7 +184,7 @@ export default function Home() {
                 />
               </div>
             </ZoomContainer>
-            
+
             <ZoomContainer className="w-full" once delay={6}>
               <div className="relative mx-auto w-full max-w-[40rem]">
                 <Image
@@ -195,7 +196,7 @@ export default function Home() {
                   width={720}
                 />
               </div>
-            </ZoomContainer>
+            </ZoomContainer> */}
           </div>
         </HeroSection>
 
@@ -255,7 +256,7 @@ export default function Home() {
           </Section>
         </div>
 
-        <div id="como-funciona">
+        <div id="como-funciona" className="w-full bg-white/80">
           <Section
             sectionClassName="px-6 py-16 sm:px-8 lg:px-10 lg:py-24"
             size="middle"
@@ -275,19 +276,19 @@ export default function Home() {
               />
             </FadeContainer>
 
-            <div className="mt-14 grid w-full items-center gap-12 lg:grid-cols-[1fr_0.9fr]">
+            <div className="mt-14 flex flex-col items-center gap-12 ">
               <RevealContainer className="w-full" once>
-                <div className="space-y-8">
+                <div className="space-y-8 w-full">
                   {landingSteps.map((step) => (
                     <div
-                      className="rounded-[1.75rem] bg-transparent p-1"
+                      className="w-full rounded-[1.75rem] bg-transparent p-1"
                       key={step.number}
                     >
-                      <div className="flex items-start gap-5">
+                      <div className="flex w-full items-center justify-center gap-5">
                         <span className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-white text-3xl font-bold text-foreground shadow-[0_10px_24px_rgba(0,0,0,0.08)]">
                           {step.number}
                         </span>
-                        <div className="flex flex-col">
+                        <div className="flex flex-col w-full">
                           <Subtitle
                             className="text-xl leading-8 sm:text-2xl font-semibold"
                             content={step.title}
@@ -303,20 +304,42 @@ export default function Home() {
                   ))}
                 </div>
               </RevealContainer>
+              <div className="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                {landingHighlights.map((highlight) => (
+                  <div
+                    className="w-full  rounded-2xl border border-foreground/8 bg-white/70 p-5 shadow-[0_12px_30px_rgba(0,0,0,0.08)]"
+                    key={highlight.label}
+                  >
+                    <Subtitle
+                      className="text-sm leading-6 text-foreground sm:text-base font-semibold"
+                      content={highlight.value}
+                      element="h2"
+                    />
+                    <Paragraph
+                      className="mt-2 text-sm leading-6 text-foreground/65 font-normal"
+                      content={highlight.label}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
 
-              <ZoomContainer className="w-full" once>
-                <div className="relative mx-auto max-w-[38rem] rounded-[2rem] border border-foreground/6 bg-white p-4 shadow-[0_22px_50px_rgba(0,0,0,0.08)]">
-                  <div className="absolute inset-x-10 bottom-2 h-8 rounded-full bg-tertiary-300/35 blur-2xl" />
-                  <Image
-                    alt={landingImages.workflow.alt}
-                    className="relative h-auto w-full rounded-[1.5rem]"
-                    height={440}
-                    src={landingImages.workflow.src}
-                    width={720}
+            {/* {landingHighlights.map((highlight) => (
+                <div
+                  className="w-fullrounded-2xl border border-foreground/8 bg-white/70 p-5 shadow-[0_12px_30px_rgba(0,0,0,0.08)]"
+                  key={highlight.label}
+                >
+                  <Subtitle
+                    className="text-sm leading-6 text-foreground sm:text-base font-semibold"
+                    content={highlight.value}
+                    element="h2"
+                  />
+                  <Paragraph
+                    className="mt-2 text-sm leading-6 text-foreground/65 font-normal"
+                    content={highlight.label}
                   />
                 </div>
-              </ZoomContainer>
-            </div>
+              ))} */}
           </Section>
         </div>
 
@@ -411,8 +434,8 @@ export default function Home() {
                           : hasAvailableCredits
                             ? "Acessar painel"
                             : user?.activePlan === plan.plan
-                            ? "Plano atual"
-                            : plan.buttonTitle
+                              ? "Plano atual"
+                              : plan.buttonTitle
                       }
                       className={
                         plan.isBestOption
