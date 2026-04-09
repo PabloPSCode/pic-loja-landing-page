@@ -38,7 +38,7 @@ export default function UploadedImage({
     <section className={clsx("w-full", className)}>
       {title && <h3 className="text-base font-semibold text-foreground">{title}</h3>}
 
-      <div className="mt-4 grid w-full gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+      <div className="mt-4 grid w-full sm:w-1/2 gap-4 lg:grid-cols-[minmax(0,1fr)_220px]">
         <div className="overflow-hidden rounded-lg border border-foreground/10 bg-bg-card">
           <div className="flex items-center justify-between border-b border-foreground/10 px-3 py-2">
             <span
@@ -64,9 +64,9 @@ export default function UploadedImage({
             <Image
               alt={imageAlt}
               fill
-              sizes="(max-width: 1024px) 100vw, 760px"
+              sizes="(max-width: 1024px) 80vw, 460px"
               src={imageSrc}
-              className="object-cover"
+              className="object-fit"
             />
           </div>
         </div>
